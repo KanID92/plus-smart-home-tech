@@ -17,9 +17,6 @@ protocol SensorEventProtocol {
 	}
 
 	record TemparatureSensorAvro {
-		string id;
-		string hubId;
-		timestamp_ms timestamp;
 		int temparature_c;
 		int temperature_f;
 	}

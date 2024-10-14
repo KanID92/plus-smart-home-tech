@@ -12,5 +12,5 @@ collector:
         key.serializer: org.apache.kafka.common.serialization.StringSerializer
         value.serializer: kafka.serializer.GeneralAvroSerializer
       topics:
-        sensors-events: telemetry.sensors,v1
+        sensors-events: telemetry.sensors.v1
         hub-events: telemetry.hubs.v1
