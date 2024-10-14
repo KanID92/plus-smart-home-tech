@@ -10,5 +10,7 @@ import telemetry.collector.configuration.KafkaConfig;
 public class KafkaEventProducer {
     public static void main(String[] args) {
         SpringApplication.run(KafkaConfig.class);
+
+
     }
 }

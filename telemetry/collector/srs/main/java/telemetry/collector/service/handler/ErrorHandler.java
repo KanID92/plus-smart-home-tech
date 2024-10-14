@@ -1,4 +1,4 @@
-package telemetry.collector.model.handler;
+package telemetry.collector.service.handler;
 
 
 import lombok.extern.slf4j.Slf4j;
