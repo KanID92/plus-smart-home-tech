@@ -2,7 +2,7 @@ spring:
   application:
     name: collector
 
-
+## не получается подлючить конфигурацию через application
 collector:
   kafka:
     producer:

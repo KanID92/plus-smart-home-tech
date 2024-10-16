@@ -1,8 +1,6 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.hub;
 
-import lombok.RequiredArgsConstructor;
 import ru.yandex.practicum.kafka.telemetry.event.*;
-import ru.yandex.practicum.telemetry.collector.configuration.KafkaConfig;
 import ru.yandex.practicum.telemetry.collector.model.hub.DeviceAction;
 import ru.yandex.practicum.telemetry.collector.model.hub.ScenarioCondition;
 import ru.yandex.practicum.telemetry.collector.model.hub.enums.ActionType;
@@ -10,13 +8,20 @@ import ru.yandex.practicum.telemetry.collector.model.hub.enums.ConditionOperatio
 import ru.yandex.practicum.telemetry.collector.model.hub.enums.ConditionType;
 import ru.yandex.practicum.telemetry.collector.model.hub.enums.DeviceType;
 
-@RequiredArgsConstructor
+import java.util.Properties;
+
+
 public abstract class BaseHubHandler implements HubEventHandler {
 
-    KafkaConfig kafkaConfig;
+    Properties properties;
+    String topic = "telemetry.hubs.v1";
 
-    public BaseHubHandler(KafkaConfig kafkaConfig) {
-        this.kafkaConfig = kafkaConfig;
+    public BaseHubHandler() {
+        this.properties = new Properties();
+        properties.put("bootstrap.servers", "localhost:9092");
+        properties.put("client.id", "telemetry.collector");
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "kafka.serializer.GeneralAvroSerializer");
     }
 
     DeviceTypeAvro toDeviceTypeAvro(DeviceType deviceType) {

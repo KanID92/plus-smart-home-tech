@@ -1,15 +1,19 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 
-import lombok.RequiredArgsConstructor;
-import ru.yandex.practicum.telemetry.collector.configuration.KafkaConfig;
+import java.util.Properties;
 
-@RequiredArgsConstructor
+
 public abstract class BaseSensorHandler implements SensorEventHandler {
 
-    KafkaConfig kafkaConfig;
+    Properties properties;
+    String topic = "telemetry.sensors.v1";
 
-    public BaseSensorHandler(KafkaConfig kafkaConfig) {
-        this.kafkaConfig = kafkaConfig;
+    public BaseSensorHandler() {
+        this.properties = new Properties();
+        properties.put("bootstrap.servers", "localhost:9092");
+        properties.put("client.id", "telemetry.collector");
+        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        properties.put("value.serializer", "kafka.serializer.GeneralAvroSerializer");
     }
 
 }

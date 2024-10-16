@@ -4,7 +4,6 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SwitchSensorAvro;
-import ru.yandex.practicum.telemetry.collector.configuration.KafkaConfig;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEventType;
 import ru.yandex.practicum.telemetry.collector.model.sensor.SwitchSensorEvent;
@@ -20,10 +19,9 @@ public class SwitchEventHandler extends BaseSensorHandler {
     @Override
     public void handle(SensorEvent sensorEvent) {
         ProducerRecord<String, SwitchSensorAvro> record = new ProducerRecord<>(
-                kafkaConfig.getProducer().getTopics().get(
-                        KafkaConfig.ProducerConfig.TopicType.SENSORS_EVENT), toAvro(sensorEvent));
+                topic, toAvro(sensorEvent));
         try(KafkaProducer<String, SwitchSensorAvro> producer =
-                    new KafkaProducer<>(kafkaConfig.getProducer().getProperties())) {
+                    new KafkaProducer<>(properties)) {
             producer.send(record);
         }
     }
