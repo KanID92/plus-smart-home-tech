@@ -21,7 +21,7 @@ public class GeneralAvroSerializer implements Serializer<SpecificRecordBase> {
             byte[] result = null;
             encoder = EncoderFactory.get().binaryEncoder(baos, null);
             if (data != null) {
-                DatumWriter<SpecificRecordBase> writer = new SpecificDatumWriter<>(SpecificRecordBase.class);
+                DatumWriter<SpecificRecordBase> writer = new SpecificDatumWriter<>(data.getSchema());
                 writer.write(data, encoder);
                 encoder.flush();
                 result = baos.toByteArray();
