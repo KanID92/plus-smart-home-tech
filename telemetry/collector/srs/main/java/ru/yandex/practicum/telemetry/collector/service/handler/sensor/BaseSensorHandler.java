@@ -21,7 +21,7 @@ public abstract class BaseSensorHandler implements SensorEventHandler {
         ProducerRecord<String, SpecificRecordBase> record =
                 new ProducerRecord<>(
                         topic, null, System.currentTimeMillis(), sensorEvent.getHubId(), toAvro(sensorEvent));
-        producer.sentRecord(record);
+        producer.sendRecord(record);
     }
 
     abstract SpecificRecordBase toAvro(SensorEvent sensorEvent);

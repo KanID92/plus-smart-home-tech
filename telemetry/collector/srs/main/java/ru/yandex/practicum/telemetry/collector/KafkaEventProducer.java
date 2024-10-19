@@ -21,10 +21,13 @@ public class KafkaEventProducer {
         this.producer = new KafkaProducer<>(kafkaConfig.getProducerProperties());
     }
 
-    public void sentRecord(ProducerRecord<String, SpecificRecordBase> record) {
+    public void sendRecord(ProducerRecord<String, SpecificRecordBase> record) {
         try(producer) {
             producer.send(record);
             producer.flush();
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 

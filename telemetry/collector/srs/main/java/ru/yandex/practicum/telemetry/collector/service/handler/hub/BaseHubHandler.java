@@ -21,7 +21,7 @@ public abstract class BaseHubHandler implements HubEventHandler {
         ProducerRecord<String, SpecificRecordBase> record =
                 new ProducerRecord<>(
                         topic, null, System.currentTimeMillis(), hubEvent.getHubId(), toAvro(hubEvent));
-        producer.sentRecord(record);
+        producer.sendRecord(record);
     }
 
     abstract SpecificRecordBase toAvro(HubEvent hubEvent);
