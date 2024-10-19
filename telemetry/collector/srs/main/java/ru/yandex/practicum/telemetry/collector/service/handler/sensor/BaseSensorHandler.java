@@ -1,20 +1,30 @@
 package ru.yandex.practicum.telemetry.collector.service.handler.sensor;
 
-import java.util.Properties;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import ru.yandex.practicum.telemetry.collector.KafkaEventProducer;
+import ru.yandex.practicum.telemetry.collector.model.sensor.SensorEvent;
 
 
 public abstract class BaseSensorHandler implements SensorEventHandler {
 
-    Properties properties;
-    String topic = "telemetry.sensors.v1";
+    KafkaEventProducer producer;
+    String topic;
 
-    public BaseSensorHandler() {
-        this.properties = new Properties();
-        properties.put("bootstrap.servers", "localhost:9092");
-        properties.put("client.id", "telemetry.collector");
-        properties.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        properties.put("value.serializer", "kafka.serializer.GeneralAvroSerializer");
+    public BaseSensorHandler(KafkaEventProducer kafkaProducer) {
+        this.producer = kafkaProducer;
+        topic = kafkaProducer.getConfig().getTopics().get("sensors-events");
     }
+
+    @Override
+    public void handle(SensorEvent sensorEvent) {
+        ProducerRecord<String, SpecificRecordBase> record =
+                new ProducerRecord<>(
+                        topic, null, System.currentTimeMillis(), sensorEvent.getHubId(), toAvro(sensorEvent));
+        producer.sentRecord(record);
+    }
+
+    abstract SpecificRecordBase toAvro(SensorEvent sensorEvent);
 
 }
 

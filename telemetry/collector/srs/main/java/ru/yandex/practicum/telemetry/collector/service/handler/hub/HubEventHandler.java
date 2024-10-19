@@ -5,7 +5,9 @@ import ru.yandex.practicum.telemetry.collector.model.hub.enums.HubEventType;
 
 
 public interface HubEventHandler {
+
     HubEventType getMessageType();
 
     void handle(HubEvent hubEvent);
+
 }
