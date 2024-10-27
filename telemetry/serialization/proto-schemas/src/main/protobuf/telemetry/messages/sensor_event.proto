@@ -3,8 +3,8 @@ syntax = "proto3";
 package telemetry.message.event;
 import "google/protobuf/timestamp.proto";
 
-option java_multiple_files = true;
-option java_package = "ru.yandex.practicum.grpc.telemetry.event";
+option java_multiple_files = true; //генерация нескольких классов
+option java_package = "ru.yandex.practicum.grpc.telemetry.event"; //пакет для генерации классов событий
 
 message SensorEventProto {
   string id = 1; // идентификатор датчика
