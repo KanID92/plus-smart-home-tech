@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: analyzer
+
+analyzer:
+  kafka:
+    hub-consumer-properties:
+      "bootstrap.servers": localhost:9092
+      "group.id": analyzer-hub-group
+      "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+      "value.deserializer": ##TODO
+    snapshot-consumer-properties:
+      "bootstrap.servers": localhost:9092
+      "group.id": analyzer-snapshot-group
+      "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
+      "value.deserializer": ##TODO
+    topics:
+      hubs-events: telemetry.hubs.v1
+      sensors-snapshot: telemetry.snapshots.v1
