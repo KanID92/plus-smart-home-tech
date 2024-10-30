@@ -8,12 +8,12 @@ analyzer:
       "bootstrap.servers": localhost:9092
       "group.id": analyzer-hub-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
-      "value.deserializer": ##TODO
+      "value.deserializer": kafka.serializer.HubEventDeserializer
     snapshot-consumer-properties:
       "bootstrap.servers": localhost:9092
       "group.id": analyzer-snapshot-group
       "key.deserializer": org.apache.kafka.common.serialization.StringDeserializer
-      "value.deserializer": ##TODO
+      "value.deserializer": kafka.serializer.SensorSnapshotDeserializer
     topics:
       hubs-events: telemetry.hubs.v1
       sensors-snapshot: telemetry.snapshots.v1

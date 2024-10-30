@@ -1,4 +1,4 @@
-package configuration;
+package ru.yandex.practicum.telemetry.analyzer.configuration;
 
 import lombok.Getter;
 import lombok.Setter;
