@@ -35,7 +35,7 @@ public class SnapshotProcessor implements Runnable {
 
         try (snapshotConsumer) {
             Runtime.getRuntime().addShutdownHook(new Thread(snapshotConsumer::wakeup));
-            snapshotConsumer.subscribe(List.of(kafkaConfig.getTopics().get("sensors-snapshot:")));
+            snapshotConsumer.subscribe(List.of(kafkaConfig.getTopics().get("sensors-snapshot")));
 
             while (true) {
                 ConsumerRecords<String, SensorsSnapshotAvro> records = snapshotConsumer.poll(Duration.ofSeconds(5));

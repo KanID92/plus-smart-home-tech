@@ -6,4 +6,6 @@ import ru.yandex.practicum.telemetry.analyzer.entity.Sensor;
 
 public interface SensorRepository extends JpaRepository<Sensor, String> {
 
+    void deleteByHubIdAndSensorId(final String hubId, final String id);
+
 }

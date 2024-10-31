@@ -24,11 +24,9 @@ public class Scenario {
     private String hubId;
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL)
-    @JoinColumn(name = "scenario_id")
     private Set<ScenarioCondition> scenarioConditions;
 
     @OneToMany(mappedBy = "scenario", cascade = CascadeType.ALL)
-    @JoinColumn(name = "scenario_id")
     private Set<Action> scenarioActions;
 
 

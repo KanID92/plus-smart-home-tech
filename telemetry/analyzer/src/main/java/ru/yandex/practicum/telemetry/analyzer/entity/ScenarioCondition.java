@@ -26,5 +26,13 @@ public class ScenarioCondition {
     @Column(name = "value")
     private Integer value;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "scenario_id")
+    @ToString.Exclude
+    private Scenario scenario;
+
+    @Column(name = "sensor_id")
+    private String sensorId;
+
 
 }
