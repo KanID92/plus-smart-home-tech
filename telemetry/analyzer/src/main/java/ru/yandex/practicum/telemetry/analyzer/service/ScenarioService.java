@@ -16,4 +16,5 @@ public class ScenarioService {
     public void delete(String name) {
         scenarioRepository.deleteByName(name);
     }
+
 }

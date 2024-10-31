@@ -78,13 +78,11 @@ public class HubEventProcessor implements Runnable {
 
                         default -> throw new IllegalStateException("Unexpected value: " + hubEventAvro.getPayload());
                     }
-                    //TODO
-
                 }
 
                 hubConsumer.commitAsync((offsets, exception) -> {
                     if (exception != null) {
-                        log.warn("Commit processing error. Offsets: {}", offsets, exception);
+                        log.warn("Commit hubEvent processing error. Offsets: {}", offsets, exception);
                     }
                 });
             }
