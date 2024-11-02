@@ -9,15 +9,22 @@ import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.*;
 import ru.yandex.practicum.telemetry.analyzer.configuration.KafkaAnalyzerConfig;
+import ru.yandex.practicum.telemetry.analyzer.entity.Action;
 import ru.yandex.practicum.telemetry.analyzer.entity.Scenario;
+import ru.yandex.practicum.telemetry.analyzer.entity.ScenarioCondition;
 import ru.yandex.practicum.telemetry.analyzer.entity.Sensor;
 import ru.yandex.practicum.telemetry.analyzer.mapper.ScenarioMapper;
 import ru.yandex.practicum.telemetry.analyzer.mapper.SensorMapper;
+import ru.yandex.practicum.telemetry.analyzer.repository.ActionRepository;
+import ru.yandex.practicum.telemetry.analyzer.repository.ConditionRepository;
 import ru.yandex.practicum.telemetry.analyzer.service.ScenarioService;
 import ru.yandex.practicum.telemetry.analyzer.service.SensorService;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -28,14 +35,21 @@ public class HubEventProcessor implements Runnable {
 
     private final SensorService sensorService;
     private final ScenarioService scenarioService;
+    private final ConditionRepository conditionRepository;
+    private final ActionRepository actionRepository;
 
     public HubEventProcessor(KafkaAnalyzerConfig kafkaConfig,
                              SensorService sensorService,
-                             ScenarioService scenarioService) {
+                             ScenarioService scenarioService,
+                             ConditionRepository conditionRepository,
+                             ActionRepository actionRepository) {
         this.kafkaConfig = kafkaConfig;
         hubConsumer = new KafkaConsumer<>(kafkaConfig.getHubConsumerProperties());
         this.sensorService = sensorService;
         this.scenarioService = scenarioService;
+        this.conditionRepository = conditionRepository;
+        this.actionRepository = actionRepository;
+
     }
 
 
@@ -56,25 +70,41 @@ public class HubEventProcessor implements Runnable {
                         case DeviceAddedEventAvro deviceAddedEventAvro -> {
                             Sensor addedSensor = SensorMapper.avroToSensor(hubEventAvro.getHubId(), deviceAddedEventAvro);
                             sensorService.add(addedSensor);
-                            break;
                         }
 
-                        case DeviceRemovedEventAvro deviceRemovedEventAvro -> {
+                        case DeviceRemovedEventAvro deviceRemovedEventAvro ->
                             sensorService.delete(hubEventAvro.getHubId(), deviceRemovedEventAvro.getId());
-                            break;
-                        }
 
 
                         case ScenarioAddedEventAvro scenarioAddedEventAvro -> {
-                            Scenario addedScenario = ScenarioMapper.avroToScenario(hubEventAvro.getHubId(), scenarioAddedEventAvro);
-                            scenarioService.add(addedScenario);
-                            break;
+                            Optional<Scenario> oldScenario = scenarioService.findByNameAndHubId(
+                                    scenarioAddedEventAvro.getName(), hubEventAvro.getHubId());
+
+                            if(oldScenario.isEmpty()) {
+                                Scenario addedScenario = ScenarioMapper.avroToScenario(hubEventAvro.getHubId(), scenarioAddedEventAvro);
+                                scenarioService.add(addedScenario);
+                            } else {
+                                Set<Long> oldConditionsIds = oldScenario.get().getScenarioConditions().stream()
+                                        .map(ScenarioCondition::getConditionId)
+                                        .collect(Collectors.toSet());
+                                conditionRepository.deleteAllByConditionIdIn(oldConditionsIds);
+                                Set<Long> oldActions = oldScenario.get().getScenarioActions().stream()
+                                        .map(Action::getActionId)
+                                        .collect(Collectors.toSet());
+                                actionRepository.deleteAllByActionIdIn(oldActions);
+
+                                Scenario addedScenario = ScenarioMapper.avroToScenario(
+                                        hubEventAvro.getHubId(), scenarioAddedEventAvro);
+
+                                conditionRepository.saveAll(addedScenario.getScenarioConditions());
+                                actionRepository.saveAll(addedScenario.getScenarioActions());
+
+                            }
+
                         }
 
-                        case ScenarioRemovedEventAvro scenarioRemovedEventAvro -> {
-                            scenarioService.delete(scenarioRemovedEventAvro.getName());
-                            break;
-                        }
+                        case ScenarioRemovedEventAvro scenarioRemovedEventAvro ->
+                            scenarioService.delete(scenarioRemovedEventAvro.getName(), hubEventAvro.getHubId());
 
                         default -> throw new IllegalStateException("Unexpected value: " + hubEventAvro.getPayload());
                     }
@@ -92,8 +122,6 @@ public class HubEventProcessor implements Runnable {
                 log.error("Analyzer. Error by handling HubEvents from kafka", e);
         } finally {
                 log.info("Analyzer. Closing consumer.");
-                hubConsumer.close();
-
         }
     }
 

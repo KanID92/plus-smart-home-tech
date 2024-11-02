@@ -5,8 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.kafka.telemetry.event.SensorEventAvro;
@@ -45,14 +47,19 @@ public class AggregationStarter {
 
             //poll loop - цикл опроса
             while (true) {
+                Map<TopicPartition, OffsetAndMetadata> currentOffsets = new HashMap<>();
+
                 ConsumerRecords<String, SensorEventAvro> records =
                         consumer.poll(Duration.ofSeconds(5));
+                int count = 0;
                 for (ConsumerRecord<String, SensorEventAvro> record : records) {
                     SensorEventAvro event = record.value();
                     Optional<SensorsSnapshotAvro> updateSnapshot = updateState(event);
                     updateSnapshot.ifPresent(this::sendSnapshot);
+                    manageOffsets(record, count++, currentOffsets);
                 }
 
+                producer.flush();
                 consumer.commitAsync((offsets, exception) -> {
                     if(exception != null) {
                         log.warn("Commit processing error. Offsets: {}", offsets, exception);
@@ -72,6 +79,23 @@ public class AggregationStarter {
             producer.close();
         }
 
+    }
+
+    private void manageOffsets(ConsumerRecord<String, SensorEventAvro> record,
+                               int count,
+                               Map<TopicPartition, OffsetAndMetadata> currentOffsets) {
+        currentOffsets.put(
+                new TopicPartition(record.topic(), record.partition()),
+                new OffsetAndMetadata(record.offset() + 1)
+        );
+
+        if (count % 200 == 0) {
+            consumer.commitAsync(currentOffsets, (offsets, exception) -> {
+                if (exception != null) {
+                    log.warn("Commit processing error. Offsets: {}", offsets, exception);
+                }
+            });
+        }
     }
 
     private Optional<SensorsSnapshotAvro> updateState(SensorEventAvro event) {
@@ -108,16 +132,19 @@ public class AggregationStarter {
         log.info("Sending snapshot for {}. SnapShot: {}", snapshot.getHubId(), snapshot);
         ProducerRecord<String, SensorsSnapshotAvro> snapshotRecord =
                 new ProducerRecord<>(
-                        kafkaConfig.getTopics().get("sensors-snapshots"), null, snapshot.getHubId(),snapshot);
+                        kafkaConfig.getTopics().get("sensors-snapshots"),
+                        null,
+                        snapshot.getTimestamp().toEpochMilli(),
+                        snapshot.getHubId(),
+                        snapshot);
         log.info("Sending snapshot {}", snapshotRecord);
-        try(producer) {
-            producer.send(snapshotRecord);
-            producer.flush();
-            Thread.sleep(3000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-
+        producer.send(snapshotRecord, (metadata, exception) -> {
+            if (exception != null) {
+                log.warn("Sending snapshot error. Metadata: {}", metadata, exception);
+            } else {
+                log.info("Snapshot send {}", snapshot);
+            }
+        });
     }
 
 }

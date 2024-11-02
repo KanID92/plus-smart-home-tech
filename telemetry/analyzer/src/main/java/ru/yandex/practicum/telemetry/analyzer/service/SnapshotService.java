@@ -18,8 +18,8 @@ import java.util.Set;
 @Slf4j
 public class SnapshotService {
 
-    private ScenarioRepository scenarioRepository;
-    private HubRouterProcessor hubRouterProcessor;
+    private final ScenarioRepository scenarioRepository;
+    private final HubRouterProcessor hubRouterProcessor;
 
     public void analyze(SensorsSnapshotAvro sensorsSnapshot) {
 
