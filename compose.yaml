@@ -34,12 +34,22 @@ services:
                              --bootstrap-server kafka:29092'"
     init: true
 
-  sht-db:
+  sht-db-telemetry:
     image: postgres:16.1
-    container_name: sht-db
+    container_name: sht-db-telemetry
     ports:
       - "9432:5432"
     environment:
-      - POSTGRES_DB=sht-db
+      - POSTGRES_DB=sht-db-telemetry
+      - POSTGRES_USER=main
+      - POSTGRES_PASSWORD=main
+
+  sht-db-commerce:
+    image: postgres:16.1
+    container_name: sht-db-commerce
+    ports:
+      - "9433:5432"
+    environment:
+      - POSTGRES_DB=sht-db-commerce
       - POSTGRES_USER=main
       - POSTGRES_PASSWORD=main
