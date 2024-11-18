@@ -3,9 +3,7 @@ package ru.yandex.practicum.commerce.shoppingStore;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.api.dto.ProductDto;
 import ru.yandex.practicum.commerce.api.dto.SetProductQuantityStateRequest;
@@ -24,12 +22,10 @@ public class StoreController {
 
     @GetMapping
     public List<ProductDto> getAllProducts(@RequestParam ProductCategory category,
-                                           @RequestParam Integer page,
-                                           @RequestParam Integer size,
-                                           @RequestParam String sort) {
-        log.info("==> GET /api/v1/shopping-store. Getting all products by category {}, {}, {}, {}",
-                category, page, size, sort);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
+                                           Pageable pageable) {
+        log.info("==> GET /api/v1/shopping-store. Getting all products by category {}, {}",
+                category, pageable);
+        //Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
 
         log.info("==> GET /api/v1/shopping-store. Getting all products by category {}, {}", category, pageable);
 
