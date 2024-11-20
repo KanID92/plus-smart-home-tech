@@ -1,10 +1,12 @@
 package ru.yandex.practicum.commerce.api.dto;
 
+import java.util.Map;
+
 public record ShoppingCartDto(
 
         String shoppingCartId, // Идентификатор корзины в БД
 
-        long products // Отображение идентификатора товара на отобранное количество.
+        Map<String, Long> products // Отображение идентификатора товара на отобранное количество.
 
 ) {
 }
