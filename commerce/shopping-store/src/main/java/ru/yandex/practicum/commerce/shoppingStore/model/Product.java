@@ -13,8 +13,7 @@ import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 @Getter @Setter @ToString
 @EqualsAndHashCode(of = "productId")
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor @AllArgsConstructor
 public class Product {
 
     @Id

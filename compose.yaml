@@ -44,12 +44,32 @@ services:
       - POSTGRES_USER=main
       - POSTGRES_PASSWORD=main
 
-  sht-db-commerce:
+  sht-db-commerce-shopping-store:
     image: postgres:16.1
-    container_name: sht-db-commerce
+    container_name: sht-db-commerce-shopping-store
     ports:
       - "9433:5432"
     environment:
       - POSTGRES_DB=sht-db-commerce
+      - POSTGRES_USER=main
+      - POSTGRES_PASSWORD=main
+
+  sht-db-commerce-shopping-cart:
+    image: postgres:16.1
+    container_name: sht-db-commerce-shopping-cart
+    ports:
+      - "9434:5432"
+    environment:
+      - POSTGRES_DB=sht-db-commerce-shopping-cart
+      - POSTGRES_USER=main
+      - POSTGRES_PASSWORD=main
+
+  sht-db-commerce-warehouse:
+    image: postgres:16.1
+    container_name: sht-db-commerce-warehouse
+    ports:
+      - "9435:5432"
+    environment:
+      - POSTGRES_DB=sht-db-commerce-warehouse
       - POSTGRES_USER=main
       - POSTGRES_PASSWORD=main
