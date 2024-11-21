@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface CartMapper {
 
-    ShoppingCart toShoppingCart(ShoppingCartDto shoppingCartDto);
+    ShoppingCart toShoppingCart(ShoppingCartDto shoppingCartDto, String username);
 
     ShoppingCartDto toShoppingCartDto(ShoppingCart shoppingCart, List<CartProduct> products);
 }

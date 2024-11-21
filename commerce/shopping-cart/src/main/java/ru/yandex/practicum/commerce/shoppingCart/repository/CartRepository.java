@@ -5,12 +5,13 @@ import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.commerce.shoppingCart.model.ShoppingCart;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface CartRepository extends JpaRepository<ShoppingCart, Long> {
+public interface CartRepository extends JpaRepository<ShoppingCart, UUID> {
 
-    Optional<ShoppingCart> findByUsernameAndActivatedEqualsIgnoreCase(String username, boolean activated);
+    Optional<ShoppingCart> findByUsernameIgnoreCaseAndActivated(String username, boolean isActivated);
 
-    boolean existsByUsernameAndActivatedEqualsIgnoreCase(String username, boolean activated);
+    boolean existsByUsernameIgnoreCaseAndActivated(String username, boolean activated);
 
 }

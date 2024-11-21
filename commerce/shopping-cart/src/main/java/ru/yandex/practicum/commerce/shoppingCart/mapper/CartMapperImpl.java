@@ -8,6 +8,7 @@ import ru.yandex.practicum.commerce.shoppingCart.model.ShoppingCart;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,7 +17,7 @@ public class CartMapperImpl implements CartMapper {
     @Override
     public ShoppingCart toShoppingCart(ShoppingCartDto shoppingCartDto, String username) {
         return ShoppingCart.builder()
-                .shoppingCartId(shoppingCartDto.shoppingCartId())
+                .shoppingCartId(UUID.fromString(shoppingCartDto.shoppingCartId()))
                 .username(username)
                 .build();
     }
@@ -24,10 +25,10 @@ public class CartMapperImpl implements CartMapper {
     @Override
     public ShoppingCartDto toShoppingCartDto(ShoppingCart shoppingCart, List<CartProduct> products) {
         Map<String, Long> productsMap = products.stream()
-                .collect(Collectors.toMap(cartProduct -> cartProduct.getCartProductId().getProductId(), CartProduct::getQuantity));
+                .collect(Collectors.toMap(cartProduct -> cartProduct.getCartProductId().getProductId().toString(), CartProduct::getQuantity));
 
         return ShoppingCartDto.builder()
-                .shoppingCartId(shoppingCart.getShoppingCartId())
+                .shoppingCartId(shoppingCart.getShoppingCartId().toString())
                 .products(productsMap)
                 .build();
     }

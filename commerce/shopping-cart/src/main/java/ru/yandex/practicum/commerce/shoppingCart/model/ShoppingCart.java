@@ -21,8 +21,8 @@ public class ShoppingCart {
     @Column(name = "username", nullable = false)
     private String username;
 
-    @Column(name = "is_activated", nullable = false)
-    private boolean isActivated;
+    @Column(name = "activated", nullable = false)
+    private boolean activated;
 
 
 }

@@ -28,7 +28,7 @@ public class GeneralCartService implements CartService {
     @Override
     public ShoppingCartDto get(String username) {
         checkUsernameForEmpty(username);
-        Optional<ShoppingCart> shoppingCart = cartRepository.findByUsernameAndActivatedEqualsIgnoreCase(
+        Optional<ShoppingCart> shoppingCart = cartRepository.findByUsernameIgnoreCaseAndActivated(
                 username, true);
         if (shoppingCart.isPresent()) {
             List<CartProduct> cartProductList =
@@ -53,7 +53,7 @@ public class GeneralCartService implements CartService {
 
         cartProductsRepository.saveAll(newCartProducts);
 
-        return cartMapper.toShoppingCartDto(cartMapper.toShoppingCart(currentShoppingCart),
+        return cartMapper.toShoppingCartDto(cartMapper.toShoppingCart(currentShoppingCart, username),
                 cartProductsRepository.findAllCartProductsOfCart(
                         UUID.fromString(currentShoppingCart.shoppingCartId())));
 
@@ -63,7 +63,7 @@ public class GeneralCartService implements CartService {
     public void deactivate(String username) {
         checkUsernameForEmpty(username);
         Optional<ShoppingCart> shoppingCart =
-                cartRepository.findByUsernameAndActivatedEqualsIgnoreCase(username, true);
+                cartRepository.findByUsernameIgnoreCaseAndActivated(username, true);
         if (shoppingCart.isPresent()) {
             shoppingCart.get().setActivated(false);
         } else {
@@ -85,7 +85,7 @@ public class GeneralCartService implements CartService {
         List<CartProduct> newCartProducts = mapToCartProducts(cartId, products);
         List<CartProduct> savedCartProducts = cartProductsRepository.saveAll(newCartProducts);
 
-        return cartMapper.toShoppingCartDto(cartMapper.toShoppingCart(currentShoppingCart),
+        return cartMapper.toShoppingCartDto(cartMapper.toShoppingCart(currentShoppingCart, username),
                 savedCartProducts);
     }
 
