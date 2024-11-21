@@ -4,6 +4,7 @@ import jakarta.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 @Embeddable
 @Getter @Setter
@@ -11,6 +12,6 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CartProductId implements Serializable {
-    private Long shoppingCartId;
-    private Long productId;
+    private UUID shoppingCartId;
+    private UUID productId;
 }

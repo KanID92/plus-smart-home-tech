@@ -37,11 +37,10 @@ public class CartController {
     }
 
     @DeleteMapping
-    public boolean deactivate(@RequestParam String username) {
+    public void deactivate(@RequestParam String username) {
         log.info("==> DELETE /api/v1/shopping-cart Deactivate cart of user {}", username);
-        boolean isDeactivate = cartService.deactivate(username);
-        log.info("<== DELETE /api/v1/shopping-cart Result of deactivating cart of user {}", username);
-        return isDeactivate;
+        cartService.deactivate(username);
+        log.info("<== DELETE /api/v1/shopping-cart Shopping cart of of user {} id deactivated", username);
     }
 
     @PostMapping("/remove")

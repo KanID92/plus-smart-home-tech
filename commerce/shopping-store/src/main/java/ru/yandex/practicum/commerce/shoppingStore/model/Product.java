@@ -8,6 +8,8 @@ import ru.yandex.practicum.commerce.api.dto.enums.ProductCategory;
 import ru.yandex.practicum.commerce.api.dto.enums.ProductState;
 import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 
+import java.util.UUID;
+
 @Entity
 @Table(name = "products")
 @Getter @Setter @ToString
@@ -17,8 +19,9 @@ import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 public class Product {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "product_id", nullable = false)
-    String productId;
+    UUID productId;
 
     @Column(name = "name", nullable = false)
     String name;

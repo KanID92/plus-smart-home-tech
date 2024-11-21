@@ -12,7 +12,7 @@ public interface CartService {
 
     ShoppingCartDto addProducts(String username, Map<String, Long> products);
 
-    boolean deactivate(String username);
+    void deactivate(String username);
 
     ShoppingCartDto update(String username, Map<String, Long> products);
 

@@ -4,12 +4,14 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.commerce.api.dto.ProductDto;
 import ru.yandex.practicum.commerce.shoppingStore.model.Product;
 
+import java.util.UUID;
+
 @Service
 public class ProductMapperImpl implements ProductMapper {
 
     public Product toProduct(ProductDto productDto) {
         return Product.builder()
-                .productId(productDto.productId())
+                .productId(UUID.fromString(productDto.productId()))
                 .name(productDto.productName())
                 .description(productDto.description())
                 .imageSrc(productDto.imageSrc())
@@ -23,7 +25,7 @@ public class ProductMapperImpl implements ProductMapper {
 
     public ProductDto toProductDto(Product product) {
         return ProductDto.builder()
-                .productId(product.getProductId())
+                .productId(product.getProductId().toString())
                 .productName(product.getName())
                 .description(product.getDescription())
                 .imageSrc(product.getImageSrc())

@@ -8,6 +8,7 @@ import ru.yandex.practicum.commerce.shoppingCart.model.CartProduct;
 import ru.yandex.practicum.commerce.shoppingCart.model.CartProductId;
 
 import java.util.List;
+import java.util.UUID;
 
 @Repository
 public interface CartProductsRepository extends JpaRepository<CartProduct, CartProductId> {
@@ -15,5 +16,6 @@ public interface CartProductsRepository extends JpaRepository<CartProduct, CartP
     @Query("SELECT cp " +
             "FROM carts_products cp " +
             "WHERE cp.shopping_cart_id = :shoppingCartId")
-    List<CartProduct> findAllCartProductsOfCart(@Param("shoppingCartId") Long shoppingCartId);
+    List<CartProduct> findAllCartProductsOfCart(@Param("shoppingCartId") UUID shoppingCartId);
+
 }
