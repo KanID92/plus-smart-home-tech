@@ -1,18 +1,20 @@
 package ru.yandex.practicum.commerce.warehouse.service;
 
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.yandex.practicum.commerce.api.ShoppingStoreClient;
 import ru.yandex.practicum.commerce.api.dto.*;
+import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 import ru.yandex.practicum.commerce.api.dto.exception.ProductInShoppingCartLowQuantityInWarehouse;
 import ru.yandex.practicum.commerce.api.dto.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.api.dto.exception.SpecifiedProductAlreadyInWarehouseException;
+import ru.yandex.practicum.commerce.warehouse.config.WarehouseAddress;
 import ru.yandex.practicum.commerce.warehouse.mapper.BookedProductsMapper;
 import ru.yandex.practicum.commerce.warehouse.mapper.DimensionMapper;
 import ru.yandex.practicum.commerce.warehouse.model.Dimension;
 import ru.yandex.practicum.commerce.warehouse.model.ReservedProduct;
-import ru.yandex.practicum.commerce.warehouse.model.WarehouseAddress;
 import ru.yandex.practicum.commerce.warehouse.model.WarehouseProduct;
 import ru.yandex.practicum.commerce.warehouse.repository.ReservedProductsRepository;
 import ru.yandex.practicum.commerce.warehouse.repository.WarehouseProductRepository;
@@ -26,12 +28,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional (readOnly = true)
 public class GeneralWarehouseService implements WarehouseService {
 
     private final WarehouseProductRepository warehouseProductRepository;
     private final ReservedProductsRepository reservedProductsRepository;
     private final DimensionMapper dimensionMapper;
     private final BookedProductsMapper bookedProductsMapper;
+    private final ShoppingStoreClient shoppingStoreClient;
+
+    private static final long PRODUCT_LIMIT = 150;
 
     @Override
     public void addNewProduct(NewProductInWarehouseRequest newProduct) {
@@ -93,16 +99,21 @@ public class GeneralWarehouseService implements WarehouseService {
                 throw new ProductInShoppingCartLowQuantityInWarehouse(
                         "Not enough product " + productId + " + in warehouse");
             }
-
         }
 
         List<ReservedProduct> productsForBookingList = new ArrayList<>();
         for (Map.Entry<String, Long> entry : productsForBooking.entrySet()) {
-            productsForBookingList.add(ReservedProduct.builder()
+            ReservedProduct reservedProduct = ReservedProduct.builder()
                     .shoppingCartId(UUID.fromString(shoppingCart.shoppingCartId()))
                     .productId(UUID.fromString(entry.getKey()))
                     .reservedQuantity(entry.getValue())
-                    .build());
+                    .build();
+            productsForBookingList.add(reservedProduct);
+
+            shoppingStoreClient.changeProductState( //Обновление статуса количества товара в shopping store
+                    new SetProductQuantityStateRequest(
+                            reservedProduct.getProductId().toString(),
+                            specifyQuantityState(reservedProduct.getReservedQuantity())));
         }
 
         List<ReservedProduct> reservedProductsList = reservedProductsRepository.saveAll(productsForBookingList);
@@ -137,6 +148,7 @@ public class GeneralWarehouseService implements WarehouseService {
     }
 
     @Override
+    @Transactional
     public void addingProductsQuantity(AddProductToWarehouseRequest addingProductsQuantity) {
         WarehouseProduct warehouseProduct =
                 warehouseProductRepository.findByProductId(UUID.fromString(addingProductsQuantity.productId()))
@@ -144,6 +156,12 @@ public class GeneralWarehouseService implements WarehouseService {
                                 "Product with id: " + addingProductsQuantity.productId() + " not found in warehouse"));
         warehouseProduct.setQuantity(warehouseProduct.getQuantity() + addingProductsQuantity.quantity());
         WarehouseProduct saveWarehouseProduct = warehouseProductRepository.save(warehouseProduct);
+
+        shoppingStoreClient.changeProductState(
+                new SetProductQuantityStateRequest(
+                        saveWarehouseProduct.getProductId().toString(),
+                        specifyQuantityState(saveWarehouseProduct.getQuantity())));
+
         log.info("Added product with id: {}, by quantity {}. New quantity: {}",
                 addingProductsQuantity.productId(),
                 addingProductsQuantity.quantity(),
@@ -160,6 +178,19 @@ public class GeneralWarehouseService implements WarehouseService {
                 .house(warehouseAddress.getHouse())
                 .flat(warehouseAddress.getFlat())
                 .build();
+    }
+
+    private QuantityState specifyQuantityState(long quantity) {
+        if(quantity == 0) {
+            return QuantityState.ENDED;
+        } else if(quantity >= PRODUCT_LIMIT * 0.75) {
+            return QuantityState.MANY;
+        } else if (quantity >= PRODUCT_LIMIT * 0.5) {
+            return QuantityState.ENOUGH;
+        } else {
+            return QuantityState.FEW;
+        }
+
     }
 
 }

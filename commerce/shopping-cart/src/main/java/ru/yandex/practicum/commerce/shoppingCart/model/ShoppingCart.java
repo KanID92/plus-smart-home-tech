@@ -1,7 +1,11 @@
 package ru.yandex.practicum.commerce.shoppingCart.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -15,7 +19,7 @@ public class ShoppingCart {
 
     @Id
     @Column(name = "shoppingCart_id", nullable = false)
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @UuidGenerator
     private UUID shoppingCartId;
 
     @Column(name = "username", nullable = false)

@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS dimensions
 
 CREATE TABLE IF NOT EXISTS warehouse_products
 (
-    warehouse_Product_Id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    warehouse_product_id    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id              UUID             NOT NULL UNIQUE,
     fragile                 BOOLEAN          NOT NULL,
     dimension_id            UUID             NOT NULL REFERENCES dimensions (dimension_id) ON DELETE CASCADE,

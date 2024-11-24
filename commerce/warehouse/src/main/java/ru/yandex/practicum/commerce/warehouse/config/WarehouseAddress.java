@@ -1,4 +1,4 @@
-package ru.yandex.practicum.commerce.warehouse.model;
+package ru.yandex.practicum.commerce.warehouse.config;
 
 import lombok.Getter;
 import lombok.Setter;

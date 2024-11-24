@@ -1,9 +1,11 @@
 package ru.yandex.practicum.commerce.shoppingCart.service;
 
-import jakarta.transaction.Transactional;
+
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.api.WarehouseClient;
 import ru.yandex.practicum.commerce.api.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.api.dto.ChangeProductQuantityRequest;
@@ -30,6 +32,7 @@ public class GeneralCartService implements CartService {
     private final WarehouseClient warehouseClient;
 
     @Override
+    @Transactional(readOnly = true)
     public ShoppingCartDto get(String username) {
         checkUsernameForEmpty(username);
         Optional<ShoppingCart> shoppingCart = cartRepository.findByUsernameIgnoreCaseAndActivated(
@@ -44,6 +47,7 @@ public class GeneralCartService implements CartService {
     }
 
     @Override
+    @Transactional
     public ShoppingCartDto addProducts(String username, Map<String, Long> products) {
         checkUsernameForEmpty(username);
 
@@ -77,6 +81,7 @@ public class GeneralCartService implements CartService {
     }
 
     @Override
+    @Transactional
     public void deactivate(String username) {
         checkUsernameForEmpty(username);
         Optional<ShoppingCart> shoppingCart =
@@ -108,6 +113,7 @@ public class GeneralCartService implements CartService {
     }
 
     @Override
+    @Transactional
     public ShoppingCartDto changeProductQuantity(String username,
                                                  ChangeProductQuantityRequest changeProductQuantityRequest) {
         checkUsernameForEmpty(username);
@@ -143,13 +149,23 @@ public class GeneralCartService implements CartService {
     }
 
     @Override
+    @Transactional
     public BookedProductsDto book(String username) {
-//        try {
+        try {
             return warehouseClient.bookProducts(get(username));
-//        } catch (Exception e) {
-//            log.error("Ошибка при резервировании корзины");
-//            throw new RuntimeException(e.getMessage());
-//        }
+        } catch (Exception e) {
+            log.error("Ошибка при резервировании корзины");
+            throw new RuntimeException(e.getMessage());
+        }
+    }
+
+    @Override
+    public ShoppingCartDto getById(String cartId) {
+        ShoppingCart shoppingCart = cartRepository.findById(UUID.fromString(cartId))
+                .orElseThrow(() -> new NotFoundException("Cart with id " + cartId + " not found"));
+        List<CartProduct> cartProductList =
+                cartProductsRepository.findAllByCartProductId_ShoppingCartId(UUID.fromString(cartId));
+        return cartMapper.toShoppingCartDto(shoppingCart, cartProductList);
     }
 
     private void checkUsernameForEmpty(String username) {

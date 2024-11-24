@@ -21,6 +21,8 @@ public interface CartService {
 
     BookedProductsDto book(String username);
 
+    ShoppingCartDto getById(String username);
+
 
 
 }

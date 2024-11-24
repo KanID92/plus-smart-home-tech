@@ -1,7 +1,11 @@
 package ru.yandex.practicum.commerce.warehouse.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -14,7 +18,7 @@ import java.util.UUID;
 public class Dimension {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @UuidGenerator
     @Column(name = "dimension_id", nullable = false)
     private UUID dimensionId;
 

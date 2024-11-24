@@ -73,6 +73,14 @@ public class CartController {
         return bookedProductsDto;
     }
 
+    @GetMapping("/{cartId}")
+    public ShoppingCartDto getShoppingCartById(@PathVariable String cartId) {
+        log.info("==> GET /api/v1/shopping-cart/{cartId} Receiving cart by cartId {}", cartId);
+        ShoppingCartDto receivedShoppingCart = cartService.getById(cartId);
+        log.info("<== GET /api/v1/shopping-cart/{cartId} Returning cart by cartId {}", cartId);
+        return receivedShoppingCart;
+    }
+
 
 
 

@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.warehouse.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import java.util.UUID;
 public class WarehouseProduct {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @UuidGenerator
     @Column(name = "warehouse_product_id", nullable = false)
     private UUID warehouseProductId;
 
