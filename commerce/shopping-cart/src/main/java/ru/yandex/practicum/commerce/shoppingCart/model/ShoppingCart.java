@@ -24,5 +24,4 @@ public class ShoppingCart {
     @Column(name = "activated", nullable = false)
     private boolean activated;
 
-
 }

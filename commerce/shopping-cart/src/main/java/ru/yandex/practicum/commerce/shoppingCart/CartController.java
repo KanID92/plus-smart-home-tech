@@ -10,12 +10,13 @@ import ru.yandex.practicum.commerce.shoppingCart.service.CartService;
 
 import java.util.Map;
 
-@RestController("/api/v1/shopping-cart")
+@RestController
 @RequiredArgsConstructor
 @Slf4j
+@RequestMapping("/api/v1/shopping-cart")
 public class CartController {
 
-    CartService cartService;
+    private final CartService cartService;
 
     @GetMapping
     public ShoppingCartDto get(@RequestParam String username) {
@@ -64,11 +65,12 @@ public class CartController {
     }
 
     @PostMapping("/booking")
-    public BookedProductsDto book(@RequestParam String username) { //TODO
+    public BookedProductsDto book(@RequestParam String username) {
         log.info("==> POST /api/v1/shopping-cart/booking book cart of user {}",
                 username);
         BookedProductsDto bookedProductsDto = cartService.book(username);
-        throw new RuntimeException("Method is not develop");
+        log.info("<== POST /api/v1/shopping-cart/booking Booked cart of user {}", bookedProductsDto);
+        return bookedProductsDto;
     }
 
 

@@ -10,6 +10,5 @@ CREATE TABLE IF NOT EXISTS products (
     rating FLOAT,
     category VARCHAR,
     price FLOAT
-
 );
 

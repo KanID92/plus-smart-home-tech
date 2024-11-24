@@ -25,7 +25,6 @@ public class StoreController {
                                            Pageable pageable) {
         log.info("==> GET /api/v1/shopping-store. Getting all products by category {}, {}",
                 category, pageable);
-        //Pageable pageable = PageRequest.of(page, size, Sort.by(sort));
 
         log.info("==> GET /api/v1/shopping-store. Getting all products by category {}, {}", category, pageable);
 

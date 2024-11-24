@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS shopping_carts (
 
 CREATE TABLE IF NOT EXISTS carts_products (
     shopping_cart_id uuid NOT NULL,
-    product_id VARCHAR NOT NULL,
+    product_id uuid NOT NULL,
     quantity BIGINT NOT NULL,
     CONSTRAINT carts_products_PK
         PRIMARY KEY (shopping_cart_id, product_id),

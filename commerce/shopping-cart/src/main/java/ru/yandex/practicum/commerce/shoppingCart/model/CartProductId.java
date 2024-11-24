@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.util.UUID;
 
 @Embeddable
-@Getter @Setter
+@Getter @Setter @EqualsAndHashCode
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

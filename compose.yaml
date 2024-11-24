@@ -50,7 +50,7 @@ services:
     ports:
       - "9433:5432"
     environment:
-      - POSTGRES_DB=sht-db-commerce
+      - POSTGRES_DB=sht-db-commerce-shopping-store
       - POSTGRES_USER=main
       - POSTGRES_PASSWORD=main
 

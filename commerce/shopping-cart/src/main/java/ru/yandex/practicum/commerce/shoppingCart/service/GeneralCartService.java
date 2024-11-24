@@ -2,7 +2,9 @@ package ru.yandex.practicum.commerce.shoppingCart.service;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.commerce.api.WarehouseClient;
 import ru.yandex.practicum.commerce.api.dto.BookedProductsDto;
 import ru.yandex.practicum.commerce.api.dto.ChangeProductQuantityRequest;
 import ru.yandex.practicum.commerce.api.dto.ShoppingCartDto;
@@ -19,11 +21,13 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GeneralCartService implements CartService {
 
     private final CartRepository cartRepository;
     private final CartProductsRepository cartProductsRepository;
     private final CartMapper cartMapper;
+    private final WarehouseClient warehouseClient;
 
     @Override
     public ShoppingCartDto get(String username) {
@@ -32,7 +36,7 @@ public class GeneralCartService implements CartService {
                 username, true);
         if (shoppingCart.isPresent()) {
             List<CartProduct> cartProductList =
-                    cartProductsRepository.findAllCartProductsOfCart(shoppingCart.get().getShoppingCartId());
+                    cartProductsRepository.findAllByCartProductId_ShoppingCartId(shoppingCart.get().getShoppingCartId());
             return cartMapper.toShoppingCartDto(shoppingCart.get(), cartProductList);
         } else {
             throw new NotAuthorizedUserException("No cart for username: " + username);
@@ -42,8 +46,23 @@ public class GeneralCartService implements CartService {
     @Override
     public ShoppingCartDto addProducts(String username, Map<String, Long> products) {
         checkUsernameForEmpty(username);
-        ShoppingCartDto currentShoppingCart = get(username);
-        UUID cartId = UUID.fromString(currentShoppingCart.shoppingCartId());
+
+        Optional<ShoppingCart> shoppingCart =
+                cartRepository.findByUsernameIgnoreCaseAndActivated(username, true);
+
+        UUID cartId;
+
+        if(shoppingCart.isPresent()) {
+            cartId = shoppingCart.get().getShoppingCartId();
+        } else {
+            ShoppingCart newCart = ShoppingCart.builder()
+                    .username(username)
+                    .activated(true)
+                    .build();
+            ShoppingCart savedShoppingCart = cartRepository.save(newCart);
+            cartId = savedShoppingCart.getShoppingCartId();
+        }
+
         List<CartProduct> newCartProducts = new ArrayList<>();
         for (Map.Entry<String, Long> entry : products.entrySet()) {
             newCartProducts.add(
@@ -53,9 +72,7 @@ public class GeneralCartService implements CartService {
 
         cartProductsRepository.saveAll(newCartProducts);
 
-        return cartMapper.toShoppingCartDto(cartMapper.toShoppingCart(currentShoppingCart, username),
-                cartProductsRepository.findAllCartProductsOfCart(
-                        UUID.fromString(currentShoppingCart.shoppingCartId())));
+        return get(username);
 
     }
 
@@ -78,8 +95,9 @@ public class GeneralCartService implements CartService {
         ShoppingCartDto currentShoppingCart = get(username);
         UUID cartId = UUID.fromString(currentShoppingCart.shoppingCartId());
 
-
         List<CartProduct> currentCartProducts = mapToCartProducts(cartId, currentShoppingCart.products());
+
+
         cartProductsRepository.deleteAll(currentCartProducts);
 
         List<CartProduct> newCartProducts = mapToCartProducts(cartId, products);
@@ -94,25 +112,44 @@ public class GeneralCartService implements CartService {
                                                  ChangeProductQuantityRequest changeProductQuantityRequest) {
         checkUsernameForEmpty(username);
         ShoppingCartDto currentShoppingCart = get(username);
+
+        log.info("Нужный объем продукта {}: {}",
+                changeProductQuantityRequest.productId(), changeProductQuantityRequest.newQuantity());
+
         UUID cartId = UUID.fromString(currentShoppingCart.shoppingCartId());
 
         Optional<CartProduct> cartProduct = cartProductsRepository.findById(
                 new CartProductId(cartId, UUID.fromString(changeProductQuantityRequest.productId())));
 
+
         if (cartProduct.isPresent()) {
-            cartProduct.get().setQuantity(cartProduct.get().getQuantity());
+            log.info("Существующая корзина пользователя {} найдена", username);
+            CartProduct cartProductForSave = cartProduct.get();
+            log.info("Текущий объем продукта {}: {}",
+                    cartProductForSave.getCartProductId(), cartProductForSave.getQuantity());
+            cartProductForSave.setQuantity(changeProductQuantityRequest.newQuantity());
+            log.info("Измененный объем продукта {}: {}",
+                    cartProduct.get().getCartProductId(), cartProduct.get().getQuantity());
             cartProductsRepository.save(cartProduct.get());
         } else {
             throw new NoProductsInShoppingCartException(
                     "Product with id " + changeProductQuantityRequest.productId() + " not found");
         }
 
-        return get(username);
+        ShoppingCartDto savedShoppingCartDto = get(username);
+        log.info("Измененный shopping cart: {}", savedShoppingCartDto);
+
+        return savedShoppingCartDto;
     }
 
     @Override
-    public BookedProductsDto book(String username) { //TODO
-        return null;
+    public BookedProductsDto book(String username) {
+//        try {
+            return warehouseClient.bookProducts(get(username));
+//        } catch (Exception e) {
+//            log.error("Ошибка при резервировании корзины");
+//            throw new RuntimeException(e.getMessage());
+//        }
     }
 
     private void checkUsernameForEmpty(String username) {
