@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: gateway
+  config:
+    import: configserver:
+  cloud:
+    config:
+      fail-fast: true
+      retry:
+        userRandomPolicy: true
+      discovery:
+        enabled: true
+        serviceID: config-server
+
+eureka:
+
+
