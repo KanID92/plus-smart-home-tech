@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.api.dto.*;
+import ru.yandex.practicum.commerce.api.dto.exception.AssemblyProductForOrderRequest;
 import ru.yandex.practicum.commerce.warehouse.service.WarehouseService;
 
 import java.util.Map;
@@ -30,21 +31,23 @@ public class WarehouseController {
         log.info("||| POST /api/v1/warehouse/return. Products returned");
     }
 
-    @PostMapping("/booking")
-    public BookedProductsDto bookProducts(@RequestBody ShoppingCartDto shoppingCart) {
-        log.info("==> POST /api/v1/warehouse/booking. Booking products: {}", shoppingCart);
-        BookedProductsDto bookedProducts = warehouseService.bookProducts(shoppingCart);
-        log.info("<== POST /api/v1/warehouse/booking. Booked products: {}", bookedProducts);
+    @PostMapping("/check")
+    public BookedProductsDto checkForProductsSufficiency(@RequestBody ShoppingCartDto shoppingCart) {
+        log.info("==> POST /api/v1/warehouse/check. Check products sufficiency: {}", shoppingCart);
+        BookedProductsDto bookedProducts = warehouseService.checkForProductsSufficiency(shoppingCart);
+        log.info("<== POST /api/v1/warehouse/check. Checked Booked products: {}", bookedProducts);
         return bookedProducts;
     }
 
     @PostMapping("/assembly")
-    public BookedProductsDto assemblyProductForOrder(AssemblyProductForOrderFromShoppingCartRequest assembly) {
-        log.info("==> POST /api/v1/warehouse/assembly. Assembly product for order: {}", assembly);
-        BookedProductsDto assemblyProducts = warehouseService.assemblyProductsForOrder(assembly);
-        log.info("<== POST /api/v1/warehouse/assembly. Assembly product for order completed: {}", assemblyProducts);
+    public BookedProductsDto assemblyProductForOrder(AssemblyProductForOrderRequest productForOrderRequest) {
+        log.info("==> POST /api/v1/warehouse/assembly. Assembly product for order (new method): {}", productForOrderRequest);
+        BookedProductsDto assemblyProducts = warehouseService.assemblyProductsForOrder(productForOrderRequest);
+        log.info("<== POST /api/v1/warehouse/assembly. " +
+                "Assembly product for order (new method) completed: {}", productForOrderRequest);
         return assemblyProducts;
     }
+
 
     @PostMapping("/add")
     public void addQuantityOfProduct(@RequestBody AddProductToWarehouseRequest addingProductsQuantity) {
@@ -59,6 +62,15 @@ public class WarehouseController {
         AddressDto addressDto = warehouseService.getWarehouseAddress();
         log.info("<== GET /api/v1/warehouse/address. Warehouse address: {}", addressDto);
         return addressDto;
+    }
+
+    @PostMapping("/shipped")
+    public void shipToDelivery(ShippedToDeliveryRequest shippedToDeliveryRequest) {
+        log.info("==> GET /api/v1/warehouse/shipped. Change order status to <On Delivery>");
+        warehouseService.shipToDelivery(shippedToDeliveryRequest);
+
+        log.info("==> GET /api/v1/warehouse/address. Change order status to <On Delivery>");
+
     }
 
 

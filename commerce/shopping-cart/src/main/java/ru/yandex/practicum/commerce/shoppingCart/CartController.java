@@ -64,11 +64,11 @@ public class CartController {
         return changedShoppingCart;
     }
 
-    @PostMapping("/booking")
-    public BookedProductsDto book(@RequestParam String username) {
+    @PostMapping("/check")
+    public BookedProductsDto checkForProductsSufficiency(@RequestParam String username) {
         log.info("==> POST /api/v1/shopping-cart/booking book cart of user {}",
                 username);
-        BookedProductsDto bookedProductsDto = cartService.book(username);
+        BookedProductsDto bookedProductsDto = cartService.checkForProductsSufficiency(username);
         log.info("<== POST /api/v1/shopping-cart/booking Booked cart of user {}", bookedProductsDto);
         return bookedProductsDto;
     }

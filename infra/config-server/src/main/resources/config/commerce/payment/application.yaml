@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    username: "main"
+    password: "main"
+    url: jdbc:postgresql://localhost:9438/postgres
+    driver-class-name: "org.postgresql.Driver"
+
+    sql:
+      init:
+        mode: always
+
+payment:
+  tax: 10
+
+server:
+  port: 0

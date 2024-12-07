@@ -19,7 +19,7 @@ public interface CartService {
     ShoppingCartDto changeProductQuantity(
             String username, ChangeProductQuantityRequest changeProductQuantityRequest);
 
-    BookedProductsDto book(String username);
+    BookedProductsDto checkForProductsSufficiency(String username);
 
     ShoppingCartDto getById(String username);
 

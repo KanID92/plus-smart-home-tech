@@ -150,9 +150,9 @@ public class GeneralCartService implements CartService {
 
     @Override
     @Transactional
-    public BookedProductsDto book(String username) {
+    public BookedProductsDto checkForProductsSufficiency(String username) {
         try {
-            return warehouseClient.bookProducts(get(username));
+            return warehouseClient.checkForProductsSufficiency(get(username));
         } catch (Exception e) {
             log.error("Ошибка при резервировании корзины");
             throw new RuntimeException(e.getMessage());
