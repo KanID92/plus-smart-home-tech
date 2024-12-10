@@ -7,11 +7,13 @@ import ru.yandex.practicum.commerce.api.dto.enums.ProductCategory;
 import ru.yandex.practicum.commerce.api.dto.enums.ProductState;
 import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 
+import java.util.UUID;
+
 @Builder
 public record ProductDto (
 
         @NotBlank
-        String productId, // Идентификатор товара в БД
+        UUID productId, // Идентификатор товара в БД
 
         @NotBlank
         String productName, // Наименование товара

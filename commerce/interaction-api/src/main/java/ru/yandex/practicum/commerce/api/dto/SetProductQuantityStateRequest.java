@@ -3,10 +3,12 @@ package ru.yandex.practicum.commerce.api.dto;
 import jakarta.validation.constraints.NotBlank;
 import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
 
+import java.util.UUID;
+
 public record SetProductQuantityStateRequest(
 
         @NotBlank
-        String productId, // Идентификатор товара
+        UUID productId, // Идентификатор товара
 
         @NotBlank
         QuantityState quantityState // Статус, перечисляющий состояние остатка как свойства товара

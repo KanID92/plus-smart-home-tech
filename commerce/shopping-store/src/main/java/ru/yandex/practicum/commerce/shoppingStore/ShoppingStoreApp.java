@@ -8,8 +8,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @SpringBootApplication
 @ConfigurationPropertiesScan
 @EnableDiscoveryClient
-public class ShoppingStore {
+public class ShoppingStoreApp {
     public static void main(String[] args) {
-        SpringApplication.run(ShoppingStore.class, args);
+        SpringApplication.run(ShoppingStoreApp.class, args);
     }
 }
