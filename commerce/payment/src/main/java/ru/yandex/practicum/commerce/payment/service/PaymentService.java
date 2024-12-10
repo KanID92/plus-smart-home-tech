@@ -5,6 +5,8 @@ import org.springframework.http.ResponseEntity;
 import ru.yandex.practicum.commerce.api.dto.OrderDto;
 import ru.yandex.practicum.commerce.api.dto.PaymentDto;
 
+import java.util.UUID;
+
 public interface PaymentService {
 
     PaymentDto create(OrderDto orderDto);
@@ -13,8 +15,8 @@ public interface PaymentService {
 
     float calculateProductCost(OrderDto orderDto);
 
-    ResponseEntity<Void> refund(String orderId);
+    ResponseEntity<Void> refund(UUID orderId);
 
-    void paymentFailed(String orderId);
+    void paymentFailed(UUID orderId);
 
 }

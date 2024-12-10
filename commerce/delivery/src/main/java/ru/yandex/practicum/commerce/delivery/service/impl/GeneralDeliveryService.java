@@ -2,7 +2,6 @@ package ru.yandex.practicum.commerce.delivery.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.api.OrderClient;
@@ -30,8 +29,7 @@ public class GeneralDeliveryService implements DeliveryService {
     private final OrderClient orderClient;
     private final WarehouseClient warehouseClient;
 
-    @Value("${delivery.baseCost}")
-    private final float baseCost;
+    private final float baseCost = 5;
 
     @Override
     @Transactional
@@ -41,8 +39,8 @@ public class GeneralDeliveryService implements DeliveryService {
     }
 
     @Override
-    public void setSuccessfulToDelivery(String orderId) {
-        Delivery currentDelivery = deliveryRepository.findByOrderId(UUID.fromString(orderId));
+    public void setSuccessfulToDelivery(UUID orderId) {
+        Delivery currentDelivery = deliveryRepository.findByOrderId(orderId);
         currentDelivery.setDeliveryState(DeliveryState.DELIVERED);
         deliveryRepository.save(currentDelivery);
         orderClient.deliver(orderId);
@@ -51,20 +49,20 @@ public class GeneralDeliveryService implements DeliveryService {
 
     @Override
     @Transactional
-    public void setPickedToDelivery(String orderId) {
-        Delivery currentDelivery = deliveryRepository.findByOrderId(UUID.fromString(orderId));
+    public void setPickedToDelivery(UUID orderId) {
+        Delivery currentDelivery = deliveryRepository.findByOrderId(orderId);
         currentDelivery.setDeliveryState(DeliveryState.IN_PROGRESS);
         warehouseClient.shipToDelivery(
-                new ShippedToDeliveryRequest(currentDelivery.getOrderId().toString(),
-                        currentDelivery.getDeliveryId().toString()));
+                new ShippedToDeliveryRequest(currentDelivery.getOrderId(),
+                        currentDelivery.getDeliveryId()));
         deliveryRepository.save(currentDelivery);
         log.info("Successfully picked. {}", orderId);
     }
 
     @Override
     @Transactional
-    public void setFailedToDelivery(String orderId) {
-        Delivery currentDelivery = deliveryRepository.findByOrderId(UUID.fromString(orderId));
+    public void setFailedToDelivery(UUID orderId) {
+        Delivery currentDelivery = deliveryRepository.findByOrderId(orderId);
         currentDelivery.setDeliveryState(DeliveryState.FAILED);
         deliveryRepository.save(currentDelivery);
         orderClient.abortDeliverByFail(orderId);
@@ -75,7 +73,7 @@ public class GeneralDeliveryService implements DeliveryService {
     public float calculateDeliveryCost(OrderDto orderDto) {
         float deliveryCost = baseCost;
 
-        Delivery delivery = deliveryRepository.findByOrderId(UUID.fromString(orderDto.orderId()));
+        Delivery delivery = deliveryRepository.findByOrderId(orderDto.orderId());
         Address addressFrom = delivery.getFromAddress();
         Address addressTo = delivery.getToAddress();
 

@@ -8,6 +8,8 @@ import ru.yandex.practicum.commerce.api.dto.OrderDto;
 import ru.yandex.practicum.commerce.api.dto.ProductReturnRequest;
 import ru.yandex.practicum.commerce.order.service.OrderService;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/order")
@@ -41,7 +43,7 @@ public class OrderController {
     }
 
     @PostMapping("/payment")
-    public OrderDto pay(@RequestBody String orderId) {
+    public OrderDto pay(@RequestBody UUID orderId) {
         log.info("Paying order {}", orderId);
         OrderDto orderDto = orderService.pay(orderId);
         log.info("Payed order {}", orderDto);
@@ -49,7 +51,7 @@ public class OrderController {
     }
 
     @PostMapping("/payment/failed")
-    public OrderDto abortOrderByPaymentFailed(@RequestBody String orderId) { //TODO name right?
+    public OrderDto abortOrderByPaymentFailed(@RequestBody UUID orderId) {
         log.info("Aborting order with id: {} by payment failed", orderId);
         OrderDto orderDto = orderService.abortByPayment(orderId);
         log.info("Aborted order with id: {} by payment failed", orderDto);
@@ -57,7 +59,7 @@ public class OrderController {
     }
 
     @PostMapping("/delivery")
-    public OrderDto deliver(@RequestBody String orderId) {
+    public OrderDto deliver(@RequestBody UUID orderId) {
         log.info("Delivering order by id {}", orderId);
         OrderDto orderDto = orderService.deliver(orderId);
         log.info("Delivered order by id {}", orderDto);
@@ -65,7 +67,7 @@ public class OrderController {
     }
 
     @PostMapping("/delivery/failed")
-    public OrderDto abortDeliverByFail(@RequestBody String orderId) { //TODO name right?
+    public OrderDto abortDeliverByFail(@RequestBody UUID orderId) {
         log.info("Aborting order with id {} by fail", orderId);
         OrderDto orderDto = orderService.abortByFail(orderId);
         log.info("Aborted order with id {} by fail", orderDto);
@@ -73,7 +75,7 @@ public class OrderController {
     }
 
     @PostMapping("/completed")
-    public OrderDto complete(@RequestBody String orderId) {
+    public OrderDto complete(@RequestBody UUID orderId) {
         log.info("Completing order by id: {}", orderId);
         OrderDto completedOrder = orderService.complete(orderId);
         log.info("Completed order by id: {}", completedOrder);
@@ -81,7 +83,7 @@ public class OrderController {
     }
 
     @PostMapping("/total")
-    public OrderDto calculateOrderCost(@RequestBody String orderId) {
+    public OrderDto calculateOrderCost(@RequestBody UUID orderId) {
         log.info("Calculating price for order with id: {}", orderId);
         OrderDto orderDto = orderService.calculateOrderCost(orderId);
         log.info("Calculated price for order with id: {}", orderDto);
@@ -89,7 +91,7 @@ public class OrderController {
     }
 
     @PostMapping("/calculate/delivery")
-    public OrderDto calculateDeliveryCost(@RequestBody String orderId) {
+    public OrderDto calculateDeliveryCost(@RequestBody UUID orderId) {
         log.info("Calculating delivery cost for order with id: {}", orderId);
         OrderDto orderDto = orderService.calculateDeliveryCost(orderId);
         log.info("Calculated delivery cost for order with id: {}", orderDto);
@@ -97,7 +99,7 @@ public class OrderController {
     }
 
     @PostMapping("/assembly")
-    public OrderDto assembly(@RequestBody String orderId) {
+    public OrderDto assembly(@RequestBody UUID orderId) {
         log.info("Assembling order with id: {}", orderId);
         OrderDto orderDto = orderService.assembly(orderId);
         log.info("Assembled order with id: {}", orderDto);
@@ -105,7 +107,7 @@ public class OrderController {
     }
 
     @PostMapping("/assembly/failed")
-    public OrderDto abortAssemblyByFail(@RequestBody String orderId) { //TODO name right
+    public OrderDto abortAssemblyByFail(@RequestBody UUID orderId) {
         log.info("Aborting order with id: {}", orderId);
         OrderDto orderDto = orderService.abortAssemblyByFail(orderId);
         log.info("Aborted order with id: {}", orderDto);

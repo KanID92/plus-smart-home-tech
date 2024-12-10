@@ -3,12 +3,13 @@ package ru.yandex.practicum.commerce.api.dto;
 import ru.yandex.practicum.commerce.api.dto.enums.OrderState;
 
 import java.util.Map;
+import java.util.UUID;
 
 public record OrderDto(
-        String orderId,
-        String shoppingCartId,
-        Map<String, Long> products,
-        String deliveryId,
+        UUID orderId,
+        UUID shoppingCartId,
+        Map<UUID, Long> products,
+        UUID deliveryId,
         OrderState state,
         Double deliveryVolume,
         Double deliveryWeight,

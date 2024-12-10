@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import ru.yandex.practicum.commerce.api.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.api.dto.OrderDto;
 
+import java.util.UUID;
+
 @FeignClient(name = "delivery", path = "/api/v1/delivery")
 public interface DeliveryClient {
 
@@ -14,13 +16,13 @@ public interface DeliveryClient {
     DeliveryDto create(DeliveryDto deliveryDto);
 
     @PostMapping("/successful")
-    void setDeliveryStatusSuccessful(String orderId);
+    void setDeliveryStatusSuccessful(UUID orderId);
 
     @PostMapping("/picked")
-    void setDeliveryStatusPicked(String orderId);
+    void setDeliveryStatusPicked(UUID orderId);
 
     @PostMapping("/failed")
-    void setFailedStatusToDelivery(String orderId);
+    void setFailedStatusToDelivery(UUID orderId);
 
     @GetMapping("/cost")
     Float calculateDeliveryCost(OrderDto orderDto);

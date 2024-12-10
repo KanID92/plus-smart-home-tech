@@ -1,7 +1,6 @@
 package ru.yandex.practicum.commerce.payment.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.commerce.api.DeliveryClient;
@@ -31,8 +30,7 @@ public class GeneralPaymentService implements PaymentService {
     private final ShoppingStoreClient shoppingStoreClient;
     private final OrderClient orderClient;
 
-    @Value("${payment.tax}")
-    private final double tax;
+    private final double tax = 10;
 
     @Override
     public PaymentDto create(OrderDto orderDto) {
@@ -57,9 +55,9 @@ public class GeneralPaymentService implements PaymentService {
 
     @Override
     public float calculateProductCost(OrderDto orderDto) {
-        Map<String, Long> products =  orderDto.products();
+        Map<UUID, Long> products =  orderDto.products();
         float productCost = 0f;
-        for (Map.Entry<String, Long> entry : products.entrySet()) {
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
             ProductDto product = shoppingStoreClient.getProduct(entry.getKey());
             productCost += product.price() * entry.getValue();
         }
@@ -67,8 +65,8 @@ public class GeneralPaymentService implements PaymentService {
     }
 
     @Override
-    public ResponseEntity<Void> refund(String orderId) {
-        Payment payment = paymentRepository.findPaymentByOrderId(UUID.fromString(orderId));
+    public ResponseEntity<Void> refund(UUID orderId) {
+        Payment payment = paymentRepository.findPaymentByOrderId(orderId);
         payment.setPaymentState(PaymentState.SUCCESS);
         paymentRepository.save(payment);
         orderClient.pay(orderId);
@@ -76,11 +74,11 @@ public class GeneralPaymentService implements PaymentService {
     }
 
     @Override
-    public void paymentFailed(String orderId) {
-        Payment payment = paymentRepository.findPaymentByOrderId(UUID.fromString(orderId));
+    public void paymentFailed(UUID orderId) {
+        Payment payment = paymentRepository.findPaymentByOrderId(orderId);
         payment.setPaymentState(PaymentState.FAILED);
         paymentRepository.save(payment);
         orderClient.abortOrderByPaymentFailed(orderId);
-        throw new NoPaymentFoundException(orderId);
+        throw new NoPaymentFoundException(orderId.toString());
     }
 }

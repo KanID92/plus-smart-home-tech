@@ -5,29 +5,31 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.commerce.api.dto.OrderDto;
 
+import java.util.UUID;
+
 @FeignClient(name = "order", path = "/api/v1/order")
 public interface OrderClient {
 
     @PostMapping("/assembly")
-    OrderDto assembly(@RequestBody String orderId);
+    OrderDto assembly(@RequestBody UUID orderId);
 
     @PostMapping("/delivery")
-    OrderDto deliver(@RequestBody String orderId);
+    OrderDto deliver(@RequestBody UUID orderId);
 
     @PostMapping("/payment")
-    OrderDto pay(@RequestBody String orderId);
+    OrderDto pay(@RequestBody UUID orderId);
 
     @PostMapping("/completed")
-    OrderDto complete(@RequestBody String orderId);
+    OrderDto complete(@RequestBody UUID orderId);
 
     @PostMapping("/delivery/failed")
-    OrderDto abortDeliverByFail(@RequestBody String orderId);
+    OrderDto abortDeliverByFail(@RequestBody UUID orderId);
 
     @PostMapping("/assembly/failed")
-    OrderDto abortAssemblyByFail(@RequestBody String orderId);
+    OrderDto abortAssemblyByFail(@RequestBody UUID orderId);
 
     @PostMapping("/payment/failed")
-    OrderDto abortOrderByPaymentFailed(@RequestBody String orderId);
+    OrderDto abortOrderByPaymentFailed(@RequestBody UUID orderId);
 
 
 

@@ -13,8 +13,8 @@ import ru.yandex.practicum.commerce.api.ShoppingStoreClient;
 @ConfigurationPropertiesScan
 @EnableDiscoveryClient
 @EnableFeignClients(clients = {OrderClient.class, ShoppingStoreClient.class, DeliveryClient.class})
-public class Payment {
+public class PaymentApp {
     public static void main(String[] args) {
-        SpringApplication.run(Payment.class, args);
+        SpringApplication.run(PaymentApp.class, args);
     }
 }

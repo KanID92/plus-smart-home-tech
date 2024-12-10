@@ -1,15 +1,15 @@
 package ru.yandex.practicum.commerce.warehouse.service;
 
 import ru.yandex.practicum.commerce.api.dto.*;
-import ru.yandex.practicum.commerce.api.dto.exception.AssemblyProductForOrderRequest;
 
 import java.util.Map;
+import java.util.UUID;
 
 public interface WarehouseService {
 
     void addNewProduct(NewProductInWarehouseRequest newProduct);
 
-    void returnProducts(Map<String, Long> products);
+    void returnProducts(Map<UUID, Long> products);
 
     BookedProductsDto assemblyProductsForOrder(AssemblyProductForOrderRequest assembly);
 

@@ -11,6 +11,8 @@ import ru.yandex.practicum.commerce.api.dto.OrderDto;
 import ru.yandex.practicum.commerce.api.dto.PaymentDto;
 import ru.yandex.practicum.commerce.payment.service.PaymentService;
 
+import java.util.UUID;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -29,29 +31,29 @@ public class PaymentController {
     }
 
     @PostMapping("/totalCost")
-    public Float calculateTotalCost(@RequestBody final OrderDto order) {
+    public float calculateTotalCost(@RequestBody final OrderDto order) {
         log.info("==> POST /api/v1/payment/totalCost Calculate total cost for order: {}", order);
-        Float totalCost = paymentService.calculateTotalCost(order);
+        float totalCost = paymentService.calculateTotalCost(order);
         log.info("<== POST /api/v1/payment/totalCost Total cost calculated: {}", totalCost);
         return totalCost;
     }
 
     @PostMapping("/refund")
-    public ResponseEntity<Void> refund(String orderId) {
+    public ResponseEntity<Void> refund(UUID orderId) {
         log.info("==> POST /api/v1/payment/refund Calculate product cost for order: {}", orderId);
         return paymentService.refund(orderId);
     }
 
     @PostMapping("/productCost")
-    public Float calculateProductCost(@RequestBody final OrderDto order) {
+    public float calculateProductCost(@RequestBody final OrderDto order) {
         log.info("==> POST /api/v1/payment/productCost Calculate product cost for order: {}", order);
-        Float productCost = paymentService.calculateProductCost(order);
+        float productCost = paymentService.calculateProductCost(order);
         log.info("<== POST /api/v1/payment/productCost Product cost calculated: {}", productCost);
         return productCost;
     }
 
     @PostMapping("/failed")
-    public void paymentFailed(String orderId) {
+    public void paymentFailed(UUID orderId) {
         log.info("==> POST /api/v1/payment/failed Payment failed processing: {}", orderId);
         paymentService.paymentFailed(orderId);
         log.info("<== POST /api/v1/payment/failed Payment failed: {}", orderId);

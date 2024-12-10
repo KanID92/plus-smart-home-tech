@@ -4,11 +4,15 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.api.DeliveryClient;
-import ru.yandex.practicum.commerce.api.ShoppingCartClient;
-import ru.yandex.practicum.commerce.api.dto.CreateNewOrderRequest;
-import ru.yandex.practicum.commerce.api.dto.OrderDto;
-import ru.yandex.practicum.commerce.api.dto.ProductReturnRequest;
+import ru.yandex.practicum.commerce.api.PaymentClient;
+import ru.yandex.practicum.commerce.api.WarehouseClient;
+import ru.yandex.practicum.commerce.api.dto.*;
+import ru.yandex.practicum.commerce.api.dto.enums.DeliveryState;
 import ru.yandex.practicum.commerce.api.dto.enums.OrderState;
+import ru.yandex.practicum.commerce.api.dto.exception.NoOrderFoundException;
+import ru.yandex.practicum.commerce.api.dto.exception.NotAuthorizedUserException;
+import ru.yandex.practicum.commerce.api.dto.exception.ProductInShoppingCartLowQuantityInWarehouse;
+import ru.yandex.practicum.commerce.api.dto.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.order.mapper.AddressMapper;
 import ru.yandex.practicum.commerce.order.mapper.OrderMapper;
 import ru.yandex.practicum.commerce.order.model.Order;
@@ -25,116 +29,206 @@ public class GeneralOrderService implements OrderService {
     private final OrderMapper orderMapper;
     private final AddressMapper addressMapper;
 
-    private final ShoppingCartClient shoppingCartClient;
+    private final WarehouseClient warehouseClient;
     private final DeliveryClient deliveryClient;
+    private final PaymentClient paymentClient;
 
     @Override
-    public OrderDto get(String username) { //TODO
-        //1. Взять из shopping-cart корзину по имени через Feign для products
-        //ShoppingCartDto shoppingCartDto = shoppingCartClient.get(username);
-        //2. Взять из warehouse BookedProductsDto с полями deliveryWeight, fragile
-        //BookedProductsDto bookedProductsDto =
-        //3. Взять price из payment
-        //4. Взять из базы Order с полями deliveryId, state
-        //5. Собрать в Order, замапить в dto и вернуть
-        return null;
+    public OrderDto get(String username) {
+        Order receivedOrder = orderRepository.findByUsername(username).orElseThrow(
+                () -> new NotAuthorizedUserException("Order with with username: " + username + ", not found"));
+        return orderMapper.toOrderDto(receivedOrder);
     }
 
     @Override
     @Transactional
-    public OrderDto create(CreateNewOrderRequest createNewOrderRequest) { //TODO не используются продукты и количество
-        //1. Взять из warehouse BookedProductsDto с полями deliveryWeight, fragile
-        //2. Взять price'ы из payment, с paymentId
-        //3. Сохранить сведения о доставке в базе delivery. Получить от него deliveryId
-        //4. Сохранить в базе с объединением.
-        //5. Вернуть OrderDto
-        //? Может быть адрес хранить в delivery?
+    public OrderDto create(CreateNewOrderRequest createNewOrderRequest) {
+
+        //проверка наличия нужно количества и получение данных будущей сборки
+        BookedProductsDto productsCheckAssembly =
+                warehouseClient.checkForProductsSufficiency(createNewOrderRequest.shoppingCart());
+
+        //создание будущего заказа (без стоимости)
         Order creatingOrder = Order.builder()
-                .shoppingCartId(
-                        UUID.fromString(
-                                createNewOrderRequest.shoppingCart().shoppingCartId()))
+                .shoppingCartId(createNewOrderRequest.shoppingCart().shoppingCartId())
                 .state(OrderState.NEW)
+                .products(createNewOrderRequest.shoppingCart().products())
+                .deliveryVolume(productsCheckAssembly.deliveryVolume())
+                .deliveryWeight(productsCheckAssembly.deliveryWeight())
+                .fragile(productsCheckAssembly.fragile())
                 .address(
                         addressMapper.toAddress(
                                 createNewOrderRequest.deliveryAddress()))
                 .build();
-        Order createdOrder = orderRepository.save(creatingOrder);
-        return orderMapper.toOrderDto(createdOrder);
+
+        //Сохранение предварительно созданного заказа
+        Order intermediateCreatedOrder = orderRepository.save(creatingOrder);
+
+        //Создание доставки с передачей orderId и получение deliveryId
+        DeliveryDto deliveryDto = deliveryClient.create(
+                DeliveryDto.builder()
+                .fromAddress(warehouseClient.getWarehouseAddress())
+                .toAddress(createNewOrderRequest.deliveryAddress())
+                .orderId(intermediateCreatedOrder.getOrderId())
+                .deliveryState(DeliveryState.CREATED)
+                .build());
+
+        //сохранение deliveryId
+        intermediateCreatedOrder.setDeliveryId(deliveryDto.orderId());
+
+        //Создание платежа и получения видов стоимости
+        PaymentDto createdPayment = paymentClient.create(orderMapper.toOrderDto(intermediateCreatedOrder));
+
+        //Сохранение стоимости
+        intermediateCreatedOrder.setPaymentId(createdPayment.paymentId());
+        intermediateCreatedOrder.setTotalPrice(createdPayment.totalPayment());
+        intermediateCreatedOrder.setDeliveryPrice(createdPayment.deliveryTotal());
+        intermediateCreatedOrder.setProductPrice(
+                paymentClient.calculateProductCost(orderMapper.toOrderDto(intermediateCreatedOrder)));
+
+        //Сохранение окончательно сформированного заказа
+        Order savedOrder = orderRepository.save(intermediateCreatedOrder);
+
+        return orderMapper.toOrderDto(savedOrder);
     }
 
     @Override
     @Transactional
     public OrderDto returnOrder(ProductReturnRequest productReturnRequest) {
-        //1. Вызвать метод возврата в Warehouse.
-        //2. Изменить статус в БД здесь
-        //3. Собрать текущий Order из микросервисов
-        //4. Вернуть OrderDto
-        return null;
+        //Проверка наличия заказа
+        Order receivedOrder = orderRepository.findById(productReturnRequest.orderId()).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + productReturnRequest.orderId() + " not found"));
+
+        //Возврат товаров на склад
+        warehouseClient.returnProducts(productReturnRequest.products());
+
+        //Изменение статуса заказа
+        receivedOrder.setState(OrderState.PRODUCT_RETURNED);
+
+        return orderMapper.toOrderDto(
+                orderRepository.save(receivedOrder));
     }
 
     @Override
-    public OrderDto pay(String orderId) {
-        //1. Вызвать create у payment.
-        //2. Изменить статус у заказа "оплачен" и сохранить paymentId
-        //3. Собрать текущий Order из микросервисов
-        //4. Вернуть OrderDto
-        return null;
+    public OrderDto pay(UUID orderId) {
+
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        paymentClient.refund(orderId);
+
+        receivedOrder.setState(OrderState.PAID);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
     }
 
     @Override
-    public OrderDto abortByPayment(String orderId) {
-        //1. Вызвать paymentFailed у payment.
-        //2. Изменить статус у заказа "failed".
-        //3. Собрать текущий Order из микросервисов
-        //4. Вернуть OrderDto
-        return null;
+    public OrderDto abortByPayment(UUID orderId) {
+
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        paymentClient.paymentFailed(orderId);
+
+        receivedOrder.setState(OrderState.PAYMENT_FAILED);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
     }
 
     @Override
-    public OrderDto deliver(String orderId) {
-        //1. Вызвать метод у delivery.
-        //2. Сохранить deliveryId в базе.
-        //3. Поменять статус у заказа. На доставлен
-        //4. Собрать текущий Order из микросервисов
-        //5. Вернуть OrderDto
-        return null;
+    public OrderDto assembly(UUID orderId) {
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        try {
+            warehouseClient.assemblyProductsForOrder(
+                    AssemblyProductForOrderRequest.builder()
+                            .orderId(orderId)
+                            .products(receivedOrder.getProducts())
+                            .build());
+
+            receivedOrder.setState(OrderState.ASSEMBLED);
+        } catch (ProductNotFoundException | ProductInShoppingCartLowQuantityInWarehouse e) {
+            abortAssemblyByFail(orderId);
+        }
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
+
     }
 
     @Override
-    public OrderDto abortByFail(String orderId) {
-        //1. Вызвать метод setFailedStatusToDelivery у Delivery
-        //2. Изменить статус в БД
-        return null;
+    public OrderDto abortAssemblyByFail(UUID orderId) {
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+        receivedOrder.setState(OrderState.ASSEMBLED_FAILED);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
     }
 
     @Override
-    public OrderDto complete(String orderId) {
-        //добавление проверок оплаты и доставки.
-        //исправление статуса в ордере.
-        return null;
+    public OrderDto deliver(UUID orderId) {
+
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        deliveryClient.setDeliveryStatusSuccessful(orderId);
+
+        receivedOrder.setState(OrderState.DELIVERED);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
+
     }
 
     @Override
-    public OrderDto calculateOrderCost(String orderId) {
-        //расчет
-        return null;
+    public OrderDto abortByFail(UUID orderId) {
+
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        deliveryClient.setFailedStatusToDelivery(orderId);
+
+        receivedOrder.setState(OrderState.DELIVERY_FAILED);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
     }
 
     @Override
-    public OrderDto calculateDeliveryCost(String orderId) {
-        //вызов метода в delivery
-        //сборка и возвращение orderDto
-        return null;
+    public OrderDto complete(UUID orderId) {
+
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        receivedOrder.setState(OrderState.COMPLETED);
+
+        return orderMapper.toOrderDto(orderRepository.save(receivedOrder));
+
     }
 
     @Override
-    public OrderDto assembly(String orderId) {
-        //изменение статуса на собран.
-        return null;
+    public OrderDto calculateOrderCost(UUID orderId) {
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        if(receivedOrder.getTotalPrice() == null) {
+            receivedOrder.setTotalPrice(paymentClient.calculateTotalCost(
+                    orderMapper.toOrderDto(receivedOrder)));
+            orderRepository.save(receivedOrder);
+        }
+        return orderMapper.toOrderDto(receivedOrder);
     }
 
     @Override
-    public OrderDto abortAssemblyByFail(String orderId) {
-        return null;
+    public OrderDto calculateDeliveryCost(UUID orderId) {
+        Order receivedOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new NoOrderFoundException("Order with id " + orderId + " not found"));
+
+        if(receivedOrder.getDeliveryPrice() == null) {
+            receivedOrder.setDeliveryPrice(deliveryClient.calculateDeliveryCost(
+                    orderMapper.toOrderDto(receivedOrder)));
+            orderRepository.save(receivedOrder);
+        }
+
+        return orderMapper.toOrderDto(receivedOrder);
     }
+
 }

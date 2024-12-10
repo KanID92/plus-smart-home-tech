@@ -45,7 +45,7 @@ public class BookedProductsMapper {
                 .build();
     }
 
-    public BookedProductsDto toCheckedBookedProductsDto(Map<String, Long> productsForChecking,
+    public BookedProductsDto toCheckedBookedProductsDto(Map<UUID, Long> productsForChecking,
                                                         List<WarehouseProduct> warehouseProductList) {
         double bookedVolume = 0.00;
         double bookedWeight = 0.00;
@@ -57,10 +57,10 @@ public class BookedProductsMapper {
             double prodWeight = warehouseProduct.getWeight();
 
             double productVolume = prodDimension.getDepth() * prodDimension.getHeight() * prodDimension.getWidth()
-                    * productsForChecking.get(productId.toString());
+                    * productsForChecking.get(productId);
             bookedVolume += productVolume;
 
-            double productWeight = prodWeight * productsForChecking.get(productId.toString());
+            double productWeight = prodWeight * productsForChecking.get(productId);
             bookedWeight += productWeight;
 
             if (warehouseProduct.isFragile()) {

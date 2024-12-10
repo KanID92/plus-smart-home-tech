@@ -7,15 +7,15 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.api.ShoppingStoreClient;
 import ru.yandex.practicum.commerce.api.dto.*;
 import ru.yandex.practicum.commerce.api.dto.enums.QuantityState;
-import ru.yandex.practicum.commerce.api.dto.exception.AssemblyProductForOrderRequest;
+import ru.yandex.practicum.commerce.api.dto.exception.NoSpecifiedProductInWareHouseException;
 import ru.yandex.practicum.commerce.api.dto.exception.ProductInShoppingCartLowQuantityInWarehouse;
 import ru.yandex.practicum.commerce.api.dto.exception.ProductNotFoundException;
 import ru.yandex.practicum.commerce.api.dto.exception.SpecifiedProductAlreadyInWarehouseException;
-import ru.yandex.practicum.commerce.warehouse.config.WarehouseAddress;
 import ru.yandex.practicum.commerce.warehouse.mapper.BookedProductsMapper;
 import ru.yandex.practicum.commerce.warehouse.mapper.DimensionMapper;
 import ru.yandex.practicum.commerce.warehouse.model.Dimension;
 import ru.yandex.practicum.commerce.warehouse.model.OrderBooking;
+import ru.yandex.practicum.commerce.warehouse.model.WarehouseAddress;
 import ru.yandex.practicum.commerce.warehouse.model.WarehouseProduct;
 import ru.yandex.practicum.commerce.warehouse.repository.OrderBookingRepository;
 import ru.yandex.practicum.commerce.warehouse.repository.WarehouseProductRepository;
@@ -42,14 +42,14 @@ public class GeneralWarehouseService implements WarehouseService {
 
     @Override
     public void addNewProduct(NewProductInWarehouseRequest newProduct) {
-        if (warehouseProductRepository.findById(UUID.fromString(newProduct.productId())).isPresent()) {
+        if (warehouseProductRepository.findById(newProduct.productId()).isPresent()) {
             throw new SpecifiedProductAlreadyInWarehouseException("Product already exists in warehouse");
         }
 
         Dimension dimension = dimensionMapper.fromDto(newProduct.dimension());
 
         WarehouseProduct warehouseProduct = WarehouseProduct.builder()
-                .productId(UUID.fromString(newProduct.productId()))
+                .productId(newProduct.productId())
                 .fragile(newProduct.fragile())
                 .dimension(dimension)
                 .weight(newProduct.weight())
@@ -60,10 +60,9 @@ public class GeneralWarehouseService implements WarehouseService {
     }
 
     @Override
-    public void returnProducts(Map<String, Long> products) {
+    public void returnProducts(Map<UUID, Long> products) {
         List<WarehouseProduct> warehouseProductList = warehouseProductRepository.findAllByProductIdIn(
                     products.keySet().stream()
-                            .map(UUID::fromString)
                             .toList());
         if (products.size() != warehouseProductList.size()) {
             throw new ProductNotFoundException("Not all product found in warehouse");
@@ -72,8 +71,8 @@ public class GeneralWarehouseService implements WarehouseService {
         Map<UUID, WarehouseProduct> productMap = warehouseProductList.stream()
                 .collect(Collectors.toMap(WarehouseProduct::getProductId, product -> product));
 
-        for (Map.Entry<String, Long> entry : products.entrySet()) {
-            UUID productId = UUID.fromString(entry.getKey());
+        for (Map.Entry<UUID, Long> entry : products.entrySet()) {
+            UUID productId = entry.getKey();
             WarehouseProduct product = productMap.get(productId);
             product.setQuantity(product.getQuantity() + entry.getValue());
         }
@@ -86,11 +85,10 @@ public class GeneralWarehouseService implements WarehouseService {
     @Transactional
     public BookedProductsDto assemblyProductsForOrder(AssemblyProductForOrderRequest productsForAssemblyRequest) {
 
-        Map<String, Long> productsForAssembly = productsForAssemblyRequest.products();
+        Map<UUID, Long> productsForAssembly = productsForAssemblyRequest.products();
 
         List<WarehouseProduct> warehouseProductList = warehouseProductRepository.findAllByProductIdIn(
                 productsForAssembly.keySet().stream()
-                        .map(UUID::fromString)
                         .toList()
         );
 
@@ -100,10 +98,10 @@ public class GeneralWarehouseService implements WarehouseService {
         checkForExistingAndEnoughQuantity(productsForAssembly, warehouseProductMap);
 
         List<OrderBooking> orderBookingList = new ArrayList<>();
-        for (Map.Entry<String, Long> entry : productsForAssembly.entrySet()) { // Для каждого товара из заказа:
+        for (Map.Entry<UUID, Long> entry : productsForAssembly.entrySet()) { // Для каждого товара из заказа:
             OrderBooking orderBooking = OrderBooking.builder() //Создание продукта в сборке
-                    .orderId(UUID.fromString(productsForAssemblyRequest.orderId()))
-                    .productId(UUID.fromString(entry.getKey()))
+                    .orderId(productsForAssemblyRequest.orderId())
+                    .productId(entry.getKey())
                     .reservedQuantity(entry.getValue())
                     .build();
             orderBookingList.add(orderBooking); //Добавление в перечень
@@ -119,11 +117,10 @@ public class GeneralWarehouseService implements WarehouseService {
 
     @Override
     public BookedProductsDto checkForProductsSufficiency(ShoppingCartDto shoppingCart) {
-        Map<String, Long> productsForChecking = shoppingCart.products();
+        Map<UUID, Long> productsForChecking = shoppingCart.products();
 
         List<WarehouseProduct> warehouseProductList = warehouseProductRepository.findAllByProductIdIn(
                 productsForChecking.keySet().stream()
-                        .map(UUID::fromString)
                         .toList()
         );
 
@@ -140,17 +137,16 @@ public class GeneralWarehouseService implements WarehouseService {
     @Transactional
     public void addingProductsQuantity(AddProductToWarehouseRequest addingProductsQuantity) {
         WarehouseProduct warehouseProduct =
-                warehouseProductRepository.findByProductId(UUID.fromString(addingProductsQuantity.productId()))
-                        .orElseThrow(() -> new ProductNotFoundException(
+                warehouseProductRepository.findByProductId(addingProductsQuantity.productId())
+                        .orElseThrow(() -> new NoSpecifiedProductInWareHouseException(
                                 "Product with id: " + addingProductsQuantity.productId() + " not found in warehouse"));
         warehouseProduct.setQuantity(warehouseProduct.getQuantity() + addingProductsQuantity.quantity());
         WarehouseProduct saveWarehouseProduct = warehouseProductRepository.save(warehouseProduct);
 
         shoppingStoreClient.changeProductState(
                 new SetProductQuantityStateRequest(
-                        saveWarehouseProduct.getProductId().toString(),
+                        saveWarehouseProduct.getProductId(),
                         specifyQuantityState(saveWarehouseProduct.getQuantity())));
-
         log.info("Added product with id: {}, by quantity {}. New quantity: {}",
                 addingProductsQuantity.productId(),
                 addingProductsQuantity.quantity(),
@@ -173,9 +169,9 @@ public class GeneralWarehouseService implements WarehouseService {
     public void shipToDelivery(ShippedToDeliveryRequest shippedToDeliveryRequest) {
         List<OrderBooking> orderBookingList =
                 orderBookingRepository.findAllOrderBookingByOrderId(
-                        UUID.fromString(shippedToDeliveryRequest.orderId()));
+                        shippedToDeliveryRequest.orderId());
         for (OrderBooking orderBooking : orderBookingList) {
-            orderBooking.setDeliveryId(UUID.fromString(shippedToDeliveryRequest.deliveryId()));
+            orderBooking.setDeliveryId(shippedToDeliveryRequest.deliveryId());
         }
         orderBookingRepository.saveAll(orderBookingList);
     }
@@ -193,13 +189,13 @@ public class GeneralWarehouseService implements WarehouseService {
 
     }
 
-    private void checkForExistingAndEnoughQuantity(Map<String, Long> productsForChecking,
+    private void checkForExistingAndEnoughQuantity(Map<UUID, Long> productsForChecking,
                                                    Map<UUID, WarehouseProduct> warehouseProductMap) {
-        for (Map.Entry<String, Long> entry : productsForChecking.entrySet()) {
-            UUID checkingProductId = UUID.fromString(entry.getKey());
+        for (Map.Entry<UUID, Long> entry : productsForChecking.entrySet()) {
+            UUID checkingProductId = entry.getKey();
 
             if(warehouseProductMap.get(checkingProductId) == null) {
-                throw new ProductNotFoundException("Product not found in warehouse: " + checkingProductId);
+                throw new NoSpecifiedProductInWareHouseException("No Product in warehouse: " + checkingProductId);
             } else if(warehouseProductMap.get(checkingProductId).getQuantity() < entry.getValue()) {
                 throw new ProductInShoppingCartLowQuantityInWarehouse(
                         "Not enough product " + checkingProductId + " + in warehouse");

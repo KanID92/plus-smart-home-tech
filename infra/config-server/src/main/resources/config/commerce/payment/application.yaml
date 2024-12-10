@@ -9,8 +9,5 @@ spring:
       init:
         mode: always
 
-payment:
-  tax: 10
-
 server:
   port: 0

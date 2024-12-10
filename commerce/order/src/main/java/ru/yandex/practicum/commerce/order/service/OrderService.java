@@ -4,6 +4,8 @@ import ru.yandex.practicum.commerce.api.dto.CreateNewOrderRequest;
 import ru.yandex.practicum.commerce.api.dto.OrderDto;
 import ru.yandex.practicum.commerce.api.dto.ProductReturnRequest;
 
+import java.util.UUID;
+
 public interface OrderService {
 
     OrderDto get(String username);
@@ -12,23 +14,23 @@ public interface OrderService {
 
     OrderDto returnOrder(ProductReturnRequest productReturnRequest);
 
-    OrderDto pay(String orderId);
+    OrderDto pay(UUID orderId);
 
-    OrderDto abortByPayment(String orderId);
+    OrderDto abortByPayment(UUID orderId);
 
-    OrderDto deliver(String orderId);
+    OrderDto deliver(UUID orderId);
 
-    OrderDto abortByFail(String orderId);
+    OrderDto abortByFail(UUID orderId);
 
-    OrderDto complete(String orderId);
+    OrderDto complete(UUID orderId);
 
-    OrderDto calculateOrderCost(String orderId);
+    OrderDto calculateOrderCost(UUID orderId);
 
-    OrderDto calculateDeliveryCost(String orderId);
+    OrderDto calculateDeliveryCost(UUID orderId);
 
-    OrderDto assembly(String orderId);
+    OrderDto assembly(UUID orderId);
 
-    OrderDto abortAssemblyByFail(String orderId);
+    OrderDto abortAssemblyByFail(UUID orderId);
 
 
 }

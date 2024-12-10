@@ -10,6 +10,8 @@ import ru.yandex.practicum.commerce.api.dto.DeliveryDto;
 import ru.yandex.practicum.commerce.api.dto.OrderDto;
 import ru.yandex.practicum.commerce.delivery.service.DeliveryService;
 
+import java.util.UUID;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -27,21 +29,21 @@ public class DeliveryController {
     }
 
     @PostMapping("/successful")
-    public void setDeliveryStatusSuccessful(String orderId) {
+    public void setDeliveryStatusSuccessful(UUID orderId) {
         log.info("setting successful to delivery: {}", orderId);
         deliveryService.setSuccessfulToDelivery(orderId);
         log.info("Set successful to delivery: {} completed", orderId);
     }
 
     @PostMapping("/picked")
-    public void setDeliveryStatusPicked(String orderId) {
+    public void setDeliveryStatusPicked(UUID orderId) {
         log.info("setting picked to delivery: {}", orderId);
         deliveryService.setPickedToDelivery(orderId);
         log.info("Set picked to delivery: {} completed", orderId);
     }
 
     @PostMapping("/failed")
-    public void setFailedStatusToDelivery(String orderId) {
+    public void setFailedStatusToDelivery(UUID orderId) {
         log.info("setting failed to delivery: {}", orderId);
         deliveryService.setFailedToDelivery(orderId);
         log.info("Set failed to delivery: {} completed", orderId);

@@ -6,11 +6,13 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.yandex.practicum.commerce.api.dto.ShoppingCartDto;
 
+import java.util.UUID;
+
 @FeignClient(name = "shopping-cart", path = "/api/v1/shopping-cart")
 public interface ShoppingCartClient {
 
     @GetMapping("/{cartId}")
-    ShoppingCartDto getShoppingCartById(@PathVariable String cartId);
+    ShoppingCartDto getShoppingCartById(@PathVariable UUID cartId);
 
     @GetMapping
     ShoppingCartDto get(@RequestParam String username);

@@ -4,10 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.commerce.api.dto.*;
-import ru.yandex.practicum.commerce.api.dto.exception.AssemblyProductForOrderRequest;
 import ru.yandex.practicum.commerce.warehouse.service.WarehouseService;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -25,7 +25,7 @@ public class WarehouseController {
     }
 
     @PostMapping("/return")
-    public void returnProducts(Map<String, Long> products) {
+    public void returnProducts(Map<UUID, Long> products) {
         log.info("==> POST /api/v1/warehouse/return. Returning products: {}", products);
         warehouseService.returnProducts(products);
         log.info("||| POST /api/v1/warehouse/return. Products returned");
