@@ -7,13 +7,16 @@ import ru.yandex.practicum.commerce.order.model.Address;
 
 @Component
 public class GeneralAddressMapper implements AddressMapper {
-    @Override
-    public Address toAddress(AddressDto addressDto) {
-        return null;
-    }
 
     @Override
-    public AddressDto toAddressDto(Address address) {
-        return null;
+    public Address toAddress(AddressDto addressDto) {
+        return Address.builder()
+                .country(addressDto.country())
+                .city(addressDto.city())
+                .street(addressDto.street())
+                .house(addressDto.house())
+                .flat(addressDto.flat())
+                .build();
     }
+
 }

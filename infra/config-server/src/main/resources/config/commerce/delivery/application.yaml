@@ -1,3 +1,6 @@
+server:
+  port: 0
+
 spring:
   jpa:
     show-sql: true
@@ -17,6 +20,5 @@ spring:
       init:
         mode: always
 
-server:
-  port: 0
-
+delivery:
+  baseCost: 5

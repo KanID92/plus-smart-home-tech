@@ -1,10 +1,12 @@
 package ru.yandex.practicum.commerce.api.dto;
 
+import lombok.Builder;
 import ru.yandex.practicum.commerce.api.dto.enums.OrderState;
 
 import java.util.Map;
 import java.util.UUID;
 
+@Builder
 public record OrderDto(
         UUID orderId,
         UUID shoppingCartId,
@@ -14,8 +16,8 @@ public record OrderDto(
         Double deliveryVolume,
         Double deliveryWeight,
         Boolean fragile,
-        Long totalPrice,
-        Long deliveryPrice,
-        Long productPrice
+        Float totalPrice,
+        Float deliveryPrice,
+        Float productPrice
 ) {
 }

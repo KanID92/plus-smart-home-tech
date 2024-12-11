@@ -7,5 +7,4 @@ public interface AddressMapper {
 
     Address toAddress(AddressDto addressDto);
 
-    AddressDto toAddressDto(Address address);
 }

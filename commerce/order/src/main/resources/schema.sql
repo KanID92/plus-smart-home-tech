@@ -18,7 +18,10 @@ CREATE TABLE IF NOT EXISTS orders (
     address_id uuid,
 
     CONSTRAINT orders_PK
-        PRIMARY KEY (order_id)
+        PRIMARY KEY (order_id),
+    CONSTRAINT FK_orders_addresses_address_id
+        FOREIGN KEY (address_id) REFERENCES addresses (address_id)
+
 );
 
 CREATE TABLE IF NOT EXISTS addresses (
@@ -30,9 +33,7 @@ CREATE TABLE IF NOT EXISTS addresses (
     flat           varchar(50),
 
     CONSTRAINT PK_addresses
-         PRIMARY KEY (address_id),
-    CONSTRAINT FK_orders_addresses_address_id
-         FOREIGN KEY (address_id) REFERENCES orders (order_id)
+         PRIMARY KEY (address_id)
 );
 
 CREATE TABLE IF NOT EXISTS orders_products (

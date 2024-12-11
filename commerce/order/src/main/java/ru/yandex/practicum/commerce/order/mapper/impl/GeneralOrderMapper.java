@@ -7,13 +7,21 @@ import ru.yandex.practicum.commerce.order.model.Order;
 
 @Component
 public class GeneralOrderMapper implements OrderMapper {
-    @Override
-    public Order toOrder(OrderDto orderDto) {
-        return null;
-    }
 
     @Override
     public OrderDto toOrderDto(Order order) {
-        return null;
+        return OrderDto.builder()
+                .orderId(order.getOrderId())
+                .shoppingCartId(order.getShoppingCartId())
+                .products(order.getProducts())
+                .deliveryId(order.getDeliveryId())
+                .state(order.getState())
+                .deliveryWeight(order.getDeliveryWeight())
+                .deliveryVolume(order.getDeliveryVolume())
+                .fragile(order.isFragile())
+                .totalPrice(order.getTotalPrice())
+                .deliveryPrice(order.getDeliveryPrice())
+                .productPrice(order.getProductPrice())
+                .build();
     }
 }

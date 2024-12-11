@@ -2,6 +2,7 @@ package ru.yandex.practicum.commerce.delivery.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.commerce.api.OrderClient;
@@ -29,7 +30,8 @@ public class GeneralDeliveryService implements DeliveryService {
     private final OrderClient orderClient;
     private final WarehouseClient warehouseClient;
 
-    private final float baseCost = 5;
+    @Value("${delivery.baseCost}")
+    private float baseCost;
 
     @Override
     @Transactional

@@ -6,11 +6,15 @@ CREATE TABLE IF NOT EXISTS deliveries (
     delivery_id             uuid DEFAULT gen_random_uuid(),
     from_address_id         uuid NOT NULL,
     to_address_id           uuid NOT NULL,
-    order_id                 uuid NOT NULL,
+    order_id                uuid NOT NULL,
     deliveryState           varchar(50),
 
     CONSTRAINT PK_deliveries
-        PRIMARY KEY (delivery_id)
+        PRIMARY KEY (delivery_id),
+    CONSTRAINT FK_deliveries_addresses_from_address_id
+        FOREIGN KEY (from_address_id) REFERENCES addresses (address_id),
+    CONSTRAINT FK_deliveries_addresses_to_address_id
+        FOREIGN KEY (to_address_id) REFERENCES addresses (address_id)
 );
 
 CREATE TABLE IF NOT EXISTS addresses (
@@ -22,9 +26,6 @@ CREATE TABLE IF NOT EXISTS addresses (
      flat           varchar(50),
 
      CONSTRAINT PK_addresses
-         PRIMARY KEY (address_id),
-     CONSTRAINT FK_deliveries_addresses_from_address_id
-         FOREIGN KEY (address_id) REFERENCES deliveries (from_address_id),
-     CONSTRAINT FK_deliveries_addresses_to_address_id
-         FOREIGN KEY (address_id) REFERENCES deliveries (to_address_id )
+         PRIMARY KEY (address_id)
+
 )
