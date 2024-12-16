@@ -3,13 +3,14 @@ package ru.yandex.practicum.commerce.api.dto;
 import lombok.Builder;
 
 import java.util.Map;
+import java.util.UUID;
 
 @Builder
 public record ShoppingCartDto(
 
-        String shoppingCartId, // Идентификатор корзины в БД
+        UUID shoppingCartId, // Идентификатор корзины в БД
 
-        Map<String, Long> products // Отображение идентификатора товара на отобранное количество.
+        Map<UUID, Long> products // Отображение идентификатора товара на отобранное количество.
 
 ) {
 }
